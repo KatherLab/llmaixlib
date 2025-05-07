@@ -73,11 +73,12 @@ def test_extract_info_with_json_schema_str():
 
     json_schema_str = json.dumps(json_schema)
 
-    extracted_text = extract_info(
+    extracted_json = extract_info(
         prompt="What is the capital of France?", json_schema=json_schema_str
     )
 
-    assert json.loads(extracted_text) == {"capital": "Paris"}
+    assert isinstance(extracted_json, dict) or isinstance(extracted_json, list)
+    assert extracted_json == {"capital": "Paris"}
 
 
 def test_extract_info_with_json_schema():
@@ -89,11 +90,12 @@ def test_extract_info_with_json_schema():
         "required": ["capital"],
     }
 
-    extracted_text = extract_info(
+    extracted_json = extract_info(
         prompt="What is the capital of France?", json_schema=json_schema
     )
 
-    assert json.loads(extracted_text) == {"capital": "Paris"}
+    assert isinstance(extracted_json, dict) or isinstance(extracted_json, list)
+    assert extracted_json == {"capital": "Paris"}
 
 
 def test_extract_info_with_pydantic_model():
@@ -104,8 +106,9 @@ def test_extract_info_with_pydantic_model():
     class Capital(BaseModel):
         capital: str
 
-    extracted_text = extract_info(
+    extracted_json = extract_info(
         prompt="What is the capital of France?", pydantic_model=Capital
     )
 
-    assert json.loads(extracted_text) == {"capital": "Paris"}
+    assert isinstance(extracted_json, dict) or isinstance(extracted_json, list)
+    assert extracted_json == {"capital": "Paris"}
