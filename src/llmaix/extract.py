@@ -115,7 +115,7 @@ def extract_info(
     temperature: float | None = None,
     max_completion_tokens: int | None = None,
     include_full_completion_result: bool = False,
-) -> str | openai.types.chat.ChatCompletion:
+) -> str | openai.types.chat.ChatCompletion | dict[str, Any] | list[Any]:
     """Extracts information from text using an LLM with flexible configuration options.
 
     This function provides a convenient interface for querying LLMs with various
@@ -138,7 +138,9 @@ def extract_info(
         include_full_completion_result: If True, returns the full completion result instead of just the text
 
     Returns:
-        str: The text content from the model's response
+        str: The text content from the model's response if no json_schema or pydantic_model is provided
+        openai.types.chat.ChatCompletion: The full completion result if include_full_completion_result is True
+        dict[str, Any] or list[Any]: The structured response if json_schema or pydantic_model is provided
 
     Raises:
         ValueError: If required parameters are missing or incompatible
@@ -263,6 +265,20 @@ def extract_info(
         if include_full_completion_result:
             return completion
         else:
-            return completion.choices[0].message.content
+            if pydantic_model or json_schema:
+                if completion.choices[0].finish_reason == "length":
+                    raise ValueError(
+                        "The model's response was too long and was truncated. "
+                        "Please increase the max_completion_tokens parameter."
+                    )
+                try:
+                    return json.loads(completion.choices[0].message.content)
+                except json.JSONDecodeError as e:
+                    raise ValueError(
+                        f"Invalid JSON response from the model: {e}. "
+                        "Please check the json_schema or pydantic_model or your model's settings."
+                    )
+            else:
+                return completion.choices[0].message.content
     except openai.OpenAIError as e:
         raise ValueError(f"Error making request to LLM API: {e}")
