@@ -1,4 +1,4 @@
-![Tests](https://github.com/KatherLab/llmaixlib/actions/workflows/test.yml/badge.svg?branch=main)
+![Tests](https://github.com/KatherLab/llmaixlib/actions/workflows/tests.yml/badge.svg?branch=main)
 
 # LLMAIx (v2) Library
 
