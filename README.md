@@ -1,3 +1,5 @@
+![Tests](https://github.com/KatherLab/llmaixlib/actions/workflows/test.yml/badge.svg?branch=main)
+
 # LLMAIx (v2) Library
 
 The Main library contains the core functionality of the LLMAIx framework.
