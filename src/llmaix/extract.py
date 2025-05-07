@@ -30,7 +30,7 @@ def make_llm_request(
     pydantic_model: Type[PydanticModel] | None = None,
     temperature: float | None = None,
     max_completion_tokens: int | None = None,
-) -> str:
+) -> openai.types.chat.ChatCompletion:
     """Makes a request to the LLM API using the provided parameters.
 
     Handles both chat/completions and responses API types, supporting structured
@@ -75,7 +75,7 @@ def make_llm_request(
             if pydantic_model:
                 params["response_format"] = pydantic_model
                 completion = client.beta.chat.completions.parse(**params)
-                return completion.choices[0].message.content
+                return completion
             elif json_schema:
                 if isinstance(json_schema, str):
                     json_schema = json.loads(json_schema)
@@ -87,8 +87,7 @@ def make_llm_request(
                         "schema": json_schema,
                     },
                 }
-            completion = client.chat.completions.create(**params)
-            return completion.choices[0].message.content
+            return client.chat.completions.create(**params)
         else:
             raise ValueError(
                 "You must provide messages if you are using the chat/completions API endpoint."
@@ -115,7 +114,8 @@ def extract_info(
     pydantic_model: Type[PydanticModel] | None = None,
     temperature: float | None = None,
     max_completion_tokens: int | None = None,
-) -> str:
+    include_full_completion_result: bool = False,
+) -> str | openai.types.chat.ChatCompletion:
     """Extracts information from text using an LLM with flexible configuration options.
 
     This function provides a convenient interface for querying LLMs with various
@@ -135,6 +135,7 @@ def extract_info(
         pydantic_model: Optional Pydantic model class to structure and validate the response
         temperature: Optional sampling temperature for controlling randomness
         max_completion_tokens: Optional maximum token limit for the response
+        include_full_completion_result: If True, returns the full completion result instead of just the text
 
     Returns:
         str: The text content from the model's response
@@ -247,7 +248,7 @@ def extract_info(
 
     try:
         # TODO: Also use stats
-        return make_llm_request(
+        completion = make_llm_request(
             client,
             llm_model,
             prompt,
@@ -258,5 +259,10 @@ def extract_info(
             temperature,
             max_completion_tokens,
         )
+
+        if include_full_completion_result:
+            return completion
+        else:
+            return completion.choices[0].message.content
     except openai.OpenAIError as e:
         raise ValueError(f"Error making request to LLM API: {e}")
