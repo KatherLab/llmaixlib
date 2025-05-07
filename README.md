@@ -4,6 +4,9 @@
 
 The Main library contains the core functionality of the LLMAIx framework.
 
+>[!CAUTION]
+> The interface of the library is still in development and may change in the future. The library is not yet ready for production use.
+
 ## Features
 
 - **Preprocessing**: The library provides tools for extracting text from various file formats, including PDF, DOCX, and TXT. It can apply OCR to images and PDFs, using tesseract, surya-ocr and others.
