@@ -7,7 +7,7 @@ from .utils import string_is_empty_or_garbage
 
 
 def process_pdf(
-    filename: Path,
+    filename: Path | str,
     output: Path = None,
     pdf_backend: str = "markitdown",
     ocr_backend: str | None = None,
@@ -23,7 +23,7 @@ def process_pdf(
 
     Parameters
     ----------
-    filename : Path
+    filename : Path or str
         Path to the PDF file to process
     output : Path, optional
         Path where processed PDF will be saved, defaults to a temporary file if None
@@ -63,6 +63,9 @@ def process_pdf(
     RuntimeError
         If PDF processing fails
     """
+
+    if isinstance(filename, str):
+        filename = Path(filename)
 
     if not filename.exists():
         raise FileNotFoundError(f"File {filename} does not exist.")
@@ -146,7 +149,6 @@ def process_pdf(
 def preprocess_file(
     filename: Path,
     output: Path = None,
-    verbose: bool = False,
     base_url: str = None,
     api_key: str = None,
     client: openai.OpenAI | None = None,
@@ -157,6 +159,7 @@ def preprocess_file(
     ocr_model: str | None = None,
     ocr_languages: list[str] | None = None,
     force_ocr: bool = False,
+    verbose: bool = False,
 ) -> str:
     """
     Preprocess document files for LLM input by extracting text content with intelligent fallback to OCR when needed.
@@ -175,7 +178,7 @@ def preprocess_file(
     base_url : str, optional
         Base URL for OpenAI-compatible API (alternative to providing client)
     api_key : str, optional
-        API key for OpenAI-compatible API (required with base_url or llm_model)
+        API key for OpenAI-compatible API (required with base_url or llm_model). Used for image descriptions by markitdown.
     client : openai.OpenAI, optional
         Preconfigured OpenAI client instance (alternative to base_url+api_key)
     llm_model : str, optional
