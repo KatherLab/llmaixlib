@@ -15,7 +15,7 @@ license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 dependencies = [
-    "markitdown[all]~=0.1.1",
+    "markitdown[pptx, docx, xlsx, xls, pdf]~=0.1.1",
     "click~=8.1.8",
     "pymupdf4llm~=0.0.22",
     "ocrmypdf~=16.10.1",
