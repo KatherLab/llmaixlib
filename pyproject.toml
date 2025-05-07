@@ -1,0 +1,55 @@
+[project]
+name = "llmaix"
+version = "0.0.2"
+authers = [
+    {name = "Fabian Wolf", email = "fabian.wolf2@tu-dresden.de"}
+]
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "http://github.com/KatherLab/llmaixlib"
+Documentation = "http://github.com/KatherLab/llmaixlib"
+Issues = "http://github.com/KatherLab/llmaixlib/issues"
+
+dependencies = [
+    "markitdown[all]~=0.1.1",
+    "click~=8.1.8",
+    "pymupdf4llm~=0.0.22",
+    "ocrmypdf~=16.10.1",
+    "openai~=1.77.0",
+    "pytest>=8.3.5",
+    "hatchling>=1.26",
+]
+
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+llmaix = "llmaix.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llmaix"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    'ignore::DeprecationWarning',
+]
