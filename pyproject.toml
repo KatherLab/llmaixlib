@@ -15,9 +15,10 @@ license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 dependencies = [
-    "markitdown[pptx, docx, xlsx, xls, pdf]~=0.1.1",
+    "markitdown[docx, xlsx, xls, pdf]~=0.1.1",
     "click~=8.1.8",
-    "pymupdf4llm~=0.0.22",
+    "pymupdf==1.25.3",
+    "pymupdf4llm~=0.0.17",
     "ocrmypdf~=16.10.1",
     "openai~=1.77.0",
     "pytest>=8.3.5",
@@ -43,9 +44,13 @@ packages = ["src/llmaix"]
 dev = [
     "ruff>=0.11.8",
 ]
+surya = [
+    "surya-ocr~=0.13.1",
+]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest>=8.3.5"]
+surya = ["surya-ocr~=0.13.1"]
 
 [tool.pytest.ini_options]
 filterwarnings = [

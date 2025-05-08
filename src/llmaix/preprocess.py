@@ -1,14 +1,22 @@
+import uuid
+
 import openai
 from pathlib import Path
 import pymupdf4llm
 from markitdown import MarkItDown
 import tempfile
-from .utils import string_is_empty_or_garbage
+from .utils import (
+    string_is_empty_or_garbage,
+    pdf_to_images,
+    add_text_layer_to_pdf_surya,
+    get_full_text_surya,
+)
 
 
 def process_pdf(
     filename: Path | str,
-    output: Path = None,
+    output: Path | None = None,
+    output_file: bool = False,
     pdf_backend: str = "markitdown",
     ocr_backend: str | None = None,
     use_ocr: bool = False,
@@ -17,7 +25,8 @@ def process_pdf(
     ocr_languages: list[str] | None = None,
     client: openai.OpenAI | None = None,
     llm_model: str | None = None,
-) -> str:
+    verbose: bool = False,
+) -> str | tuple[str, bytes]:
     """
     Process a PDF file and extract its text content using the specified PDF processing backend and optional OCR.
 
@@ -27,6 +36,8 @@ def process_pdf(
         Path to the PDF file to process
     output : Path, optional
         Path where processed PDF will be saved, defaults to a temporary file if None
+    output_file : bool, default=False
+        If True, a tuple (text, File) will be returned instead of just text
     pdf_backend : str, default="markitdown"
         Backend library to use for PDF text extraction, options: "markitdown", "pymupdf4llm"
     ocr_backend : str, optional
@@ -43,6 +54,7 @@ def process_pdf(
         OpenAI client instance for LLM-based text extraction (required with llm_model)
     llm_model : str, optional
         LLM model identifier to use for text extraction (required with client)
+    verbose : bool, default=False
 
     Returns
     -------
@@ -82,15 +94,32 @@ def process_pdf(
     if (ocr_backend and not use_ocr) or (use_ocr and not ocr_backend):
         raise ValueError("Both ocr_backend and use_ocr must be provided together.")
 
+    tmp_output: Path | None = output
     if not output:
-        output = Path(tempfile.gettempdir()) / f"{filename.stem}_processed.pdf"
+        # use a temp dir with a random id as filename
+        tmp_output = Path(tempfile.gettempdir()) / f"{uuid.uuid4()}.pdf"
+        if verbose:
+            print("Output file not specified. Using temporary file:", tmp_output)
     elif output.suffix != ".pdf":
         raise ValueError(
             f"Unsupported output format: {output.suffix}. Supported format is .pdf."
         )
 
-    if pdf_backend not in ["markitdown", "pymupdf4llm"]:
+    if pdf_backend not in ["markitdown", "pymupdf4llm", "ocr_backend"]:
         raise ValueError(f"Unsupported PDF backend: {pdf_backend}")
+
+    if pdf_backend == "ocr_backend" and not use_ocr:
+        raise ValueError(
+            "Cannot use the pdf_backend 'ocr_backend' without using OCR. Set use_ocr=True."
+        )
+
+    if pdf_backend == "ocr_backend" and ocr_backend == "ocrmypdf":
+        raise ValueError(
+            "Cannot use the pdf_backend 'ocr_backend' with ocrmypdf (tesseract). Tesseract produces an intermediate PDF,"
+            " which needs to be parsed by the pdf_backend. Use 'markitdown' or 'pymupdf4llm' instead."
+        )
+
+    extracted_text: str | None = None
 
     if use_ocr:
         if ocr_backend not in ["ocrmypdf", "surya-ocr", "doctr", "paddleOCR", "olmocr"]:
@@ -98,18 +127,21 @@ def process_pdf(
 
         if ocr_backend == "ocrmypdf":
             try:
+                print("OCRing PDF with ocrmypdf...")
                 import ocrmypdf as ocr
 
                 if force_ocr:
                     ocr.ocr(
                         input_file=filename,
-                        output_file=output,
+                        output_file=tmp_output,
                         force_ocr=True,
                         language=ocr_languages,
                     )
                 else:
                     ocr.ocr(
-                        input_file=filename, output_file=output, language=ocr_languages
+                        input_file=filename,
+                        output_file=tmp_output,
+                        language=ocr_languages,
                     )
             except ImportError:
                 raise ImportError(
@@ -120,34 +152,112 @@ def process_pdf(
                     f"An error occurred while processing the PDF with ocrmypdf: {e}"
                 )
 
+        elif ocr_backend == "surya-ocr":
+            try:
+                print("OCRing PDF with surya-ocr...")
+                # TODO make this more efficient for multiple documents. Currently, it loads the model for each document.
+                from surya.recognition import RecognitionPredictor
+                from surya.detection import DetectionPredictor
+
+                recognition_predictor = RecognitionPredictor()
+                detection_predictor = DetectionPredictor()
+
+                langs = None  # TODO
+
+                images = pdf_to_images(filename)
+
+                predictions = recognition_predictor(
+                    images,
+                    langs=[langs] * len(images),
+                    det_predictor=detection_predictor,
+                )
+
+                if pdf_backend == "ocr_backend" and not (output or output_file):
+                    extracted_text = get_full_text_surya(predictions)
+                else:
+                    extracted_text = add_text_layer_to_pdf_surya(
+                        pdf_path=filename,
+                        ocr_results=predictions,
+                        output_path=tmp_output,
+                    )
+
+            except ImportError:
+                raise ImportError(
+                    "surya-ocr is not installed. Please install it using 'pip install surya-ocr'."
+                )
+            except Exception as e:
+                # Add traceback if verbose
+                if verbose:
+                    import traceback
+
+                    raise RuntimeError(
+                        f"An error occurred while processing the PDF with surya-ocr: {e}. Traceback: {traceback.format_exc()}"
+                    )
+                else:
+                    raise RuntimeError(
+                        f"An error occurred while processing the PDF with surya-ocr: {e}"
+                    )
+
         else:
             raise NotImplementedError(
                 f"OCR backend {ocr_backend} is not implemented yet."
             )
     else:
-        output = filename
+        tmp_output = filename
 
     if pdf_backend == "markitdown":
         if client and llm_model:
+            print("Using MarkItDown with LLM...")
+            print("LLM Model:", llm_model)
             extracted_text = (
                 MarkItDown(client=client, llm_model=llm_model, enable_plugins=True)
-                .convert(output)
+                .convert(tmp_output)
                 .text_content
             )
         else:
+            print("Using MarkItDown without LLM...")
             extracted_text = (
-                MarkItDown(enable_plugins=True).convert(output).text_content
+                MarkItDown(enable_plugins=True).convert(tmp_output).text_content
             )
     elif pdf_backend == "pymupdf4llm":
         extracted_text = pymupdf4llm.to_markdown(filename)
+    elif pdf_backend == "ocr_backend":
+        if not extracted_text:
+            raise ValueError(
+                "Cannot use the pdf_backend 'ocr_backend' in this configuration. The ocr_backend needs to return text."
+            )
+        else:
+            if verbose:
+                print(
+                    "Taking shortcut by using the extracted text from the OCR backend directly. No intermediate PDF."
+                )
     else:
         raise ValueError(f"Unsupported PDF backend: {pdf_backend}")
 
+    if output_file:
+        with open(tmp_output, "rb") as f:
+            pdf_file = f.read()
+
+    if output:
+        # copy tmp_output to output
+        if tmp_output != output:
+            tmp_output.rename(output)
+            if verbose:
+                print(f"Temporary file {tmp_output} renamed to {output}.")
+    else:
+        # remove tmp_output
+        if tmp_output.exists():
+            tmp_output.unlink()
+            if verbose:
+                print(f"Temporary file {tmp_output} removed.")
+
+    if output_file:
+        return extracted_text, pdf_file
     return extracted_text
 
 
 def preprocess_file(
-    filename: Path,
+    filename: Path | str,
     output: Path = None,
     base_url: str = None,
     api_key: str = None,
@@ -216,6 +326,9 @@ def preprocess_file(
             f"Preprocessing {filename} with output={output}, verbose={verbose}, base_url={base_url}, and api_key={api_key}"
         )
 
+    if isinstance(filename, str):
+        filename = Path(filename)
+
     # Check if the file exists
     if not filename.exists():
         raise FileNotFoundError(f"File {filename} does not exist.")
@@ -260,6 +373,7 @@ def preprocess_file(
                 client=client,
                 llm_model=llm_model,
                 force_ocr=force_ocr,
+                verbose=verbose,
             )
         elif string_is_empty_or_garbage(extracted_text) and not use_ocr:
             raise ValueError(f"PDF {filename} is empty and no OCR was requested.")
@@ -278,6 +392,7 @@ def preprocess_file(
                 force_ocr=True,
                 client=client,
                 llm_model=llm_model,
+                verbose=verbose,
             )
 
     return extracted_text

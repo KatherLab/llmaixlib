@@ -2,7 +2,7 @@
 
 # LLMAIx (v2) Library
 
-The Main library contains the core functionality of the LLMAIx framework.
+The llmaix library contains the core functionality of the LLMAIx framework.
 
 >[!CAUTION]
 > The interface of the library is still in development and may change in the future. The library is not yet ready for production use.
@@ -90,4 +90,9 @@ Run the tests using the following command:
 
 ```bash
 uv run pytest
+```
+
+Example to just run test for preprocessing with the ocrmypdf backend:
+```bash
+uv run pytest tests/test_preprocess.py --ocr-backend ocrmypdf
 ```

@@ -1,6 +1,7 @@
 # src/llmaix/cli.py
 import click
 from dotenv import load_dotenv
+
 from .preprocess import preprocess_file
 from .extract import extract_info
 
@@ -14,14 +15,36 @@ def main():
 @main.command()
 @click.argument("filename", type=click.Path(exists=True))
 @click.option("-o", "--output", type=click.Path(), help="Output file")
+@click.option(
+    "--pdf-backend",
+    type=click.Choice(["pymupdf4llm", "markitdown", "ocr_backend"]),
+    default="markitdown",
+    help="PDF backend",
+)
+@click.option(
+    "--ocr-backend",
+    type=click.Choice(["ocrmypdf", "surya-ocr"]),
+    default="ocrmypdf",
+    help="OCR backend to use",
+)
+@click.option("--use-ocr", is_flag=True, help="Use OCR for preprocessing")
 @click.option("--base-url", type=str, help="Base URL for the API")
 @click.option("--api-key", type=str, help="API key for authentication", hide_input=True)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode")
-def preprocess(filename, output, base_url, api_key, verbose):
+def preprocess(
+    filename, output, pdf_backend, ocr_backend, use_ocr, base_url, api_key, verbose
+):
     """Preprocesses a file"""
     load_dotenv()
     result = preprocess_file(
-        filename, output=output, verbose=verbose, base_url=base_url, api_key=api_key
+        filename,
+        output=output,
+        verbose=verbose,
+        pdf_backend=pdf_backend,
+        base_url=base_url,
+        api_key=api_key,
+        ocr_backend=ocr_backend,
+        use_ocr=use_ocr,
     )
     click.echo(result)
 
