@@ -28,11 +28,12 @@ def main():
     help="OCR backend to use",
 )
 @click.option("--use-ocr", is_flag=True, help="Use OCR for preprocessing")
+@click.option("--force-ocr", is_flag=True, help="Force OCR for preprocessing")
 @click.option("--base-url", type=str, help="Base URL for the API")
 @click.option("--api-key", type=str, help="API key for authentication", hide_input=True)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode")
 def preprocess(
-    filename, output, pdf_backend, ocr_backend, use_ocr, base_url, api_key, verbose
+    filename, output, pdf_backend, ocr_backend, use_ocr, force_ocr, base_url, api_key, verbose
 ):
     """Preprocesses a file"""
     load_dotenv()
@@ -45,6 +46,7 @@ def preprocess(
         api_key=api_key,
         ocr_backend=ocr_backend,
         use_ocr=use_ocr,
+        force_ocr=force_ocr,
     )
     click.echo(result)
 

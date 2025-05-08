@@ -355,6 +355,11 @@ def preprocess_file(
     elif api_key:
         client = openai.OpenAI(api_key=api_key)
 
+    if force_ocr and not use_ocr:
+        raise ValueError(
+            "force_ocr is set to True, but use_ocr is set to False. Please also set use_ocr=True."
+        )
+
     extracted_text: str | None = None
 
     if filename.suffix == ".pdf":
@@ -377,10 +382,8 @@ def preprocess_file(
             )
         elif string_is_empty_or_garbage(extracted_text) and not use_ocr:
             raise ValueError(f"PDF {filename} is empty and no OCR was requested.")
-        elif not string_is_empty_or_garbage(extracted_text):
-            pass
         elif not string_is_empty_or_garbage(extracted_text) and use_ocr:
-            print("PDF: Text found, OCR will be re-done.")
+            print("PDF: Text found, OCR will be re-done and forced.")
             extracted_text = process_pdf(
                 filename,
                 output,
@@ -394,5 +397,7 @@ def preprocess_file(
                 llm_model=llm_model,
                 verbose=verbose,
             )
+        elif not string_is_empty_or_garbage(extracted_text):
+            pass
 
     return extracted_text
