@@ -31,7 +31,7 @@ jobs:
       - name: Build release distributions
         run: |
           # NOTE: put your own distribution build steps here.
-          uv pip install build
+          uv sync
           uv build
 
       - name: Upload distributions
