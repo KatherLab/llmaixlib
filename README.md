@@ -19,11 +19,13 @@ The llmaix library contains the core functionality of the LLMAIx framework.
 pip install llmaix
 ```
 
-To install dependencies for docling (similar for surya):
+To install dependencies for docling: 
 
 ```bash
 pip install llmaix[docling]
 ```
+
+Available Dependency groups: `surya`,`docling`
 
 To install all dependencies:
 
