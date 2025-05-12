@@ -224,7 +224,6 @@ def process_pdf(
                 )
                 from docling.pipeline.vlm_pipeline import VlmPipeline
 
-
                 api_key = os.environ["OPENAI_API_KEY"]
                 api_model = os.environ["OPENAI_MODEL"]
                 full_url: AnyUrl = AnyUrl(

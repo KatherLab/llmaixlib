@@ -5,7 +5,7 @@ def pytest_addoption(parser):
         dest="ocr_backend",
         default=None,  # Set default to None, not a list
         help="Specify OCR backends(s) to test",
-        choices=["ocrmypdf", "surya-ocr", "doclingvlm"]
+        choices=["ocrmypdf", "surya-ocr", "doclingvlm"],
     )
     parser.addoption(
         "--pdf-backend",
@@ -13,8 +13,9 @@ def pytest_addoption(parser):
         dest="pdf_backend",
         default=None,  # Set default to None, not a list
         help="Specify PDF backends(s) to test",
-        choices=["markitdown", "pymupdf4llm", "docling", "ocr_backend"]
+        choices=["markitdown", "pymupdf4llm", "docling", "ocr_backend"],
     )
+
 
 def pytest_generate_tests(metafunc):
     """Dynamically parameterize tests that use ocr_backend"""

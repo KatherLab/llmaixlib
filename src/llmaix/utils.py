@@ -1,4 +1,3 @@
-from os import PathLike
 from pathlib import Path
 from typing import Any
 
@@ -215,6 +214,7 @@ def string_is_empty_or_garbage(s: str) -> bool:
 
     return False
 
+
 def markdown_to_pdf(markdown_text, output_path: Path | str) -> Path:
     """
     Convert markdown text to a PDF file.
@@ -228,6 +228,7 @@ def markdown_to_pdf(markdown_text, output_path: Path | str) -> Path:
     """
 
     from markdown_pdf import MarkdownPdf, Section
+
     # Create PDF object
     pdf = MarkdownPdf()
 
