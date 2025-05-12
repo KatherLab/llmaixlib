@@ -1,15 +1,22 @@
+import os
+import shutil
 import uuid
+from urllib.parse import urljoin
 
 import openai
 from pathlib import Path
 import pymupdf4llm
 from markitdown import MarkItDown
 import tempfile
+
+from pydantic import AnyUrl
+
 from .utils import (
     string_is_empty_or_garbage,
     pdf_to_images,
     add_text_layer_to_pdf_surya,
     get_full_text_surya,
+    markdown_to_pdf,
 )
 
 
@@ -105,7 +112,7 @@ def process_pdf(
             f"Unsupported output format: {output.suffix}. Supported format is .pdf."
         )
 
-    if pdf_backend not in ["markitdown", "pymupdf4llm", "ocr_backend"]:
+    if pdf_backend not in ["markitdown", "pymupdf4llm", "docling", "ocr_backend"]:
         raise ValueError(f"Unsupported PDF backend: {pdf_backend}")
 
     if pdf_backend == "ocr_backend" and not use_ocr:
@@ -122,13 +129,18 @@ def process_pdf(
     extracted_text: str | None = None
 
     if use_ocr:
-        if ocr_backend not in ["ocrmypdf", "surya-ocr", "doctr", "paddleOCR", "olmocr"]:
+        if ocr_backend not in ["ocrmypdf", "surya-ocr", "doclingvlm"]:
             raise ValueError(f"Unsupported OCR backend: {ocr_backend}")
 
         if ocr_backend == "ocrmypdf":
             try:
                 print("OCRing PDF with ocrmypdf...")
                 import ocrmypdf as ocr
+
+                if shutil.which("ocrmypdf") is None:
+                    raise RuntimeError(
+                        "ocrmypdf executable not found. Please install it in your system."
+                    )
 
                 if force_ocr:
                     ocr.ocr(
@@ -183,7 +195,7 @@ def process_pdf(
 
             except ImportError:
                 raise ImportError(
-                    "surya-ocr is not installed. Please install it using 'pip install surya-ocr'."
+                    "surya-ocr is not installed. Please install it using 'pip install llmaix[surya]'."
                 )
             except Exception as e:
                 # Add traceback if verbose
@@ -197,6 +209,78 @@ def process_pdf(
                     raise RuntimeError(
                         f"An error occurred while processing the PDF with surya-ocr: {e}"
                     )
+        elif ocr_backend == "doclingvlm":
+            try:
+                print("OCRing PDF with docling...")
+                from docling.datamodel.base_models import InputFormat
+                from docling.datamodel.pipeline_options import (
+                    VlmPipelineOptions,
+                    ResponseFormat,
+                    ApiVlmOptions,
+                )
+                from docling.document_converter import (
+                    DocumentConverter,
+                    PdfFormatOption,
+                )
+                from docling.pipeline.vlm_pipeline import VlmPipeline
+
+
+                api_key = os.environ["OPENAI_API_KEY"]
+                api_model = os.environ["OPENAI_MODEL"]
+                full_url: AnyUrl = AnyUrl(
+                    urljoin(os.environ["OPENAI_API_BASE"], "chat/completions")
+                )
+
+                def remote_vlm_options(model: str, prompt: str):
+                    options = ApiVlmOptions(
+                        url=full_url,
+                        headers={
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        params=dict(
+                            model=model,
+                        ),
+                        prompt=prompt,
+                        timeout=90,
+                        scale=1.0,
+                        response_format=ResponseFormat.MARKDOWN,
+                    )
+                    return options
+
+                pipeline_options = VlmPipelineOptions(
+                    enable_remote_services=True  # <-- this is required!
+                )
+
+                pipeline_options.vlm_options = remote_vlm_options(
+                    model=api_model,
+                    prompt="OCR the full page to markdown.",
+                )
+
+                doc_converter = DocumentConverter(
+                    format_options={
+                        InputFormat.PDF: PdfFormatOption(
+                            pipeline_options=pipeline_options,
+                            pipeline_cls=VlmPipeline,
+                        )
+                    }
+                )
+
+                result = doc_converter.convert(filename)
+
+                extracted_text = result.document.export_to_markdown()
+
+                if pdf_backend != "ocr_backend" or (output or output_file):
+                    markdown_to_pdf(extracted_text, tmp_output)
+
+            except ImportError:
+                raise ImportError(
+                    "docling is not installed. Please install it using 'pip install llmaix[docling]'."
+                )
+            except Exception as e:
+                raise RuntimeError(
+                    f"An error occurred while processing the PDF with docling: {e}"
+                )
 
         else:
             raise NotImplementedError(
@@ -220,7 +304,7 @@ def process_pdf(
                 MarkItDown(enable_plugins=True).convert(tmp_output).text_content
             )
     elif pdf_backend == "pymupdf4llm":
-        extracted_text = pymupdf4llm.to_markdown(filename)
+        extracted_text = pymupdf4llm.to_markdown(tmp_output)
     elif pdf_backend == "ocr_backend":
         if not extracted_text:
             raise ValueError(
@@ -231,6 +315,23 @@ def process_pdf(
                 print(
                     "Taking shortcut by using the extracted text from the OCR backend directly. No intermediate PDF."
                 )
+    elif pdf_backend == "docling" and ocr_backend == "doclingvlm":
+        pass
+    elif pdf_backend == "docling":
+        try:
+            from docling.document_converter import DocumentConverter
+
+            converter = DocumentConverter()
+            result = converter.convert(tmp_output)
+            extracted_text = result.document.export_to_markdown()
+        except ImportError:
+            raise ImportError(
+                "docling is not installed. Please install it using 'pip install llmaix[docling]'."
+            )
+        except Exception as e:
+            raise RuntimeError(
+                f"An error occurred while processing the PDF with docling: {e}"
+            )
     else:
         raise ValueError(f"Unsupported PDF backend: {pdf_backend}")
 
@@ -294,10 +395,10 @@ def preprocess_file(
     llm_model : str, optional
         LLM model identifier for advanced text extraction
     pdf_backend : str, default="markitdown"
-        Backend library for PDF processing ("markitdown" or "pymupdf4llm")
+        Backend library for PDF processing ("markitdown", "pymupdf4llm" and "docling")
     ocr_backend : str, default="ocrmypdf"
         OCR engine to use when text extraction fails or use_ocr=True
-        Options: "ocrmypdf", "surya-ocr", "doctr", "paddleOCR", "olmocr"
+        Options: "ocrmypdf", "surya-ocr", "doclingvlm
     use_ocr : bool, default=False
         Whether to apply OCR processing to the document
     ocr_model : str, optional

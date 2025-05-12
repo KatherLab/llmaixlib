@@ -17,13 +17,13 @@ def main():
 @click.option("-o", "--output", type=click.Path(), help="Output file")
 @click.option(
     "--pdf-backend",
-    type=click.Choice(["pymupdf4llm", "markitdown", "ocr_backend"]),
+    type=click.Choice(["pymupdf4llm", "markitdown", "ocr_backend", "docling"]),
     default="markitdown",
     help="PDF backend",
 )
 @click.option(
     "--ocr-backend",
-    type=click.Choice(["ocrmypdf", "surya-ocr"]),
+    type=click.Choice(["ocrmypdf", "surya-ocr", "doclingvlm"]),
     default="ocrmypdf",
     help="OCR backend to use",
 )

@@ -9,14 +9,26 @@ The llmaix library contains the core functionality of the LLMAIx framework.
 
 ## Features
 
-- **Preprocessing**: The library provides tools for extracting text from various file formats, including PDF, DOCX, and TXT. It can apply OCR to images and PDFs, using tesseract, surya-ocr and others.
+- **Preprocessing**: The library provides tools for extracting text from various file formats, including PDF, DOCX, and TXT. It can apply OCR to images and PDFs, using tesseract, surya-ocr and VLMs via docling.
 
 - **Information Extraction**: The library provides a wrapper helping you to get a JSON response from an LLM. All OpenAI-API compatible models are supported!
 
 ## Installation
 
 ```bash
-pip install llmaixlib
+pip install llmaix
+```
+
+To install dependencies for docling (similar for surya):
+
+```bash
+pip install llmaix[docling]
+```
+
+To install all dependencies:
+
+```bash
+pip install llmaix[all]
 ```
 
 ## Usage
@@ -44,8 +56,21 @@ from llmaix import preprocess_file
 
 filename = "tests/testfiles/987462_notext.pdf"
 
-extracted_text = preprocess_file(filename, use_ocr=True)
+extracted_text = preprocess_file(filename, use_ocr=True, ocr_backend="ocrmypdf")
 ```
+
+| OCR Backends                                             | Comment                                                                                       |
+|----------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| [ocrmypdf](https://github.com/ocrmypdf/OCRmyPDF)         | Uses tesseract. Needs to be installed on the system first!                                    |
+| [surya-ocr](https://github.com/VikParuchuri/surya)       | Uses surya-ocr. Runs models via transformers library locally.                                 |
+| [doclingvlm](https://github.com/docling-project/docling) | Uses docling to perform OCR using a VLM. Configure the model like for information extraction! |
+
+| PDF Backends                                                         | Comment                                                                                                                        |
+|----------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| [pymupdf4llm](https://pymupdf.readthedocs.io/en/latest/pymupdf4llm/) | Uses pymupdf to extract text as markdown from PDF files.                                                                       |
+| [markitdown](https://github.com/microsoft/markitdown)                | Uses markitdown to extract text as markdown from PDF files.                                                                    |
+| [docling](https://github.com/docling-project/docling)                | Uses docling to extract text as markdown from PDF files. Caution: docling itself might apply OCR even if you don't specify it. |
+| ocr_backend                                                          | Directly use the text output from the OCR backend. Incompatible with ocrmypdf.                                                 |
 
 **Extracting information from a text:**
 
@@ -53,9 +78,14 @@ extracted_text = preprocess_file(filename, use_ocr=True)
 ```bash
 echo "OPENAI_API_KEY=your_openai_api_key" > .env
 ```
-2. To use a custom base url, set the `OPENAI_API_BASE` environment variable:
+2. (Optional) To use a custom base url, set the `OPENAI_API_BASE` environment variable:
 ```bash
 echo "OPENAI_API_BASE=https://your_custom_base_url/v1" >> .env
+```
+
+2. (Optional) Configure model in the `.env` file:
+```bash
+echo "OPENAI_MODEL=gpt-4o-2024-08-06" >> .env
 ```
 
 3. Use the `extract_info` function to extract information from a text. In this example, a pydantic model is used to define the expected output format. The output will be a JSON object.
