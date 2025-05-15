@@ -460,7 +460,7 @@ def preprocess_file(
             "force_ocr is set to True, but use_ocr is set to False. Please also set use_ocr=True."
         )
 
-    extracted_text: str | None = None
+    extracted_text: str = ""
 
     if filename.suffix == ".pdf":
         extracted_text = pymupdf4llm.to_markdown(filename)
@@ -470,7 +470,7 @@ def preprocess_file(
             extracted_text = process_pdf(
                 filename,
                 output,
-                pdf_backend=pdf_backend,
+                pdf_backend=pdf_backend or "markitdown",
                 ocr_backend=ocr_backend,
                 use_ocr=use_ocr,
                 ocr_model=ocr_model,
@@ -487,7 +487,7 @@ def preprocess_file(
             extracted_text = process_pdf(
                 filename,
                 output,
-                pdf_backend=pdf_backend,
+                pdf_backend=pdf_backend or "markitdown",
                 ocr_backend=ocr_backend,
                 use_ocr=use_ocr,
                 ocr_model=ocr_model,

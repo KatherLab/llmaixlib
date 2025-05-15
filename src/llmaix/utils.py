@@ -227,6 +227,9 @@ def markdown_to_pdf(markdown_text, output_path: Path | str) -> Path:
         str: Path to the created PDF file
     """
 
+    if not isinstance(output_path, Path):
+        output_path = Path(output_path)
+
     from markdown_pdf import MarkdownPdf, Section
 
     # Create PDF object
