@@ -16,13 +16,13 @@ license-files = ["LICEN[CS]E*"]
 
 dependencies = [
     "markitdown[docx, xlsx, xls, pdf]~=0.1.1",
-    "click~=8.2.0",
+    "click~=8.1.8",
     "pymupdf==1.25.3",
     "pymupdf4llm~=0.0.17",
     "ocrmypdf~=16.10.1",
     "openai~=1.78.1",
     "pytest>=8.3.5",
-    "hatchling>=1.26",
+    "hatchling~=1.27.0",
 ]
 
 [project.urls]
@@ -31,7 +31,7 @@ Documentation = "http://github.com/KatherLab/llmaixlib"
 Issues = "http://github.com/KatherLab/llmaixlib/issues"
 
 [build-system]
-requires = ["hatchling >= 1.26"]
+requires = ["hatchling ~= 1.27.0"]
 build-backend = "hatchling.build"
 
 [project.scripts]
@@ -42,21 +42,21 @@ packages = ["src/llmaix"]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.11.9",
+    "ruff>=0.11.10",
 ]
 surya = [
-    "surya-ocr~=0.13.1",
+    "surya-ocr~=0.14.0",
 ]
 docling = [
-    "docling~=2.31.0",
+    "docling~=2.32.0",
     "markdown-pdf~=1.7",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3.5"]
-surya = ["surya-ocr~=0.13.1"]
+surya = ["surya-ocr~=0.14.0"]
 docling = [
-    "docling~=2.31.0",
+    "docling~=2.32.0",
     "markdown-pdf~=1.7",
 ]
 
