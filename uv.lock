@@ -2129,7 +2129,7 @@ wheels = [
 
 [[package]]
 name = "surya-ocr"
-version = "0.14.0"
+version = "0.14.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
@@ -2146,9 +2146,9 @@ dependencies = [
     { name = "torch", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
     { name = "transformers", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/ab/7a4c408ad0fb4a5d266544e2516b3ba35af15f0525e6ac7236c4a4b914d2/surya_ocr-0.14.0.tar.gz", hash = "sha256:3e8dd8bbff5029d2645fdce05a9cec1876171fabde6496e188db98127715fe37", size = 146678, upload-time = "2025-05-13T20:36:31.519Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/11/98/88019a7b7ad86c0ba0c8d19c7a68da637fedaf9e785df1f9746120d583e9/surya_ocr-0.14.1.tar.gz", hash = "sha256:655cf9df26e79901791dd590b2c14dffb2adee461669f2de9ff12adc1d7049c6", size = 147105, upload-time = "2025-05-16T21:52:52.744Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/8c/adc047b5208073d59231cb328ecacba3f81b9c328bbda320ecd49a076dc7/surya_ocr-0.14.0-py3-none-any.whl", hash = "sha256:1efd31fb8657a22f48d62d915c6653b840e1079d577968cd1d98e5017b603c19", size = 174004, upload-time = "2025-05-13T20:36:30.147Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/e1/f5dc11abf0fbc6f7774f1c4c37b5ee2433d34692c80f55f47281d3265d5a/surya_ocr-0.14.1-py3-none-any.whl", hash = "sha256:e1d5435fc4dc354bf4a21b48e7552c4ed3840da01c89d57fa6c2e2c49005c296", size = 174260, upload-time = "2025-05-16T21:52:51.345Z" },
 ]
 
 [[package]]
