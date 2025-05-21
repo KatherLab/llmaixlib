@@ -10,27 +10,54 @@ from openai.types.chat import (
     ChatCompletionSystemMessageParam,
     ChatCompletionUserMessageParam,
     ChatCompletionAssistantMessageParam,
+    ChatCompletion,
 )
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
+
+
+def convert_messages_to_types(
+    messages: list[dict[str, str]],
+) -> list[
+    ChatCompletionAssistantMessageParam
+    | ChatCompletionUserMessageParam
+    | ChatCompletionSystemMessageParam
+]:
+    """Converts a list of message dictionaries to OpenAI message types.
+
+    Args:
+        messages: List of message dictionaries with 'role' and 'content' keys.
+
+    Returns:
+        List of OpenAI message types.
+    """
+    converted_messages = []
+    for message in messages:
+        if message["role"] == "user":
+            converted_messages.append(ChatCompletionUserMessageParam(**message))
+        elif message["role"] == "assistant":
+            converted_messages.append(ChatCompletionAssistantMessageParam(**message))
+        elif message["role"] == "system":
+            converted_messages.append(ChatCompletionSystemMessageParam(**message))
+        else:
+            raise ValueError(
+                f"Invalid role '{message['role']}' in message. "
+                "Valid roles are 'user', 'assistant', and 'system'."
+            )
+    return converted_messages
 
 
 def make_llm_request(
     client: openai.OpenAI,
     llm_model: str,
     prompt: str | None = None,
-    messages: list[
-        ChatCompletionSystemMessageParam
-        | ChatCompletionUserMessageParam
-        | ChatCompletionAssistantMessageParam
-    ]
-    | None = None,
+    messages: list[dict[str, str]] | None = None,
     api_type: str = "chat/completions",
     json_schema: str | dict[str, Any] | list[Any] | None = None,
     pydantic_model: Type[PydanticModel] | None = None,
     temperature: float | None = None,
     max_completion_tokens: int | None = None,
-) -> openai.types.chat.ChatCompletion:
+) -> ChatCompletion:
     """Makes a request to the LLM API using the provided parameters.
 
     Handles both chat/completions and responses API types, supporting structured
@@ -57,14 +84,9 @@ def make_llm_request(
 
     if api_type == "chat/completions":
         if messages:
-            messages: list[
-                ChatCompletionSystemMessageParam
-                | ChatCompletionUserMessageParam
-                | ChatCompletionAssistantMessageParam
-            ] = messages
-            params = {
+            params: dict[str, Any] = {
                 "model": llm_model,
-                "messages": messages,
+                "messages": convert_messages_to_types(messages),
             }
             if temperature:
                 params["temperature"] = temperature
@@ -102,7 +124,7 @@ def make_llm_request(
 
 
 def extract_info(
-    llm_model: str | None = None,
+    llm_model: str = "",
     prompt: str | None = None,
     system_prompt: str | None = None,
     messages: list[dict[str, str]] | None = None,
@@ -115,7 +137,7 @@ def extract_info(
     temperature: float | None = None,
     max_completion_tokens: int | None = None,
     include_full_completion_result: bool = False,
-) -> str | openai.types.chat.ChatCompletion | dict[str, Any] | list[Any]:
+) -> str | ChatCompletion | dict[str, Any] | list[Any]:
     """Extracts information from text using an LLM with flexible configuration options.
 
     This function provides a convenient interface for querying LLMs with various
@@ -187,8 +209,8 @@ def extract_info(
 
     if not llm_model:
         if os.environ.get("OPENAI_MODEL"):
-            llm_model = os.environ.get("OPENAI_MODEL")
-        else:
+            llm_model = os.environ.get("OPENAI_MODEL", "")
+        if not llm_model:
             raise ValueError("llm_model is required")
 
     # check if either prompt or messages is provided but not both

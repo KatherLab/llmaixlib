@@ -33,7 +33,7 @@ def process_pdf(
     client: openai.OpenAI | None = None,
     llm_model: str | None = None,
     verbose: bool = False,
-) -> str | tuple[str, bytes]:
+) -> tuple[str, bytes | None]:
     """
     Process a PDF file and extract its text content using the specified PDF processing backend and optional OCR.
 
@@ -84,7 +84,13 @@ def process_pdf(
     """
 
     if isinstance(filename, str):
-        filename = Path(filename)
+        filename: Path = Path(filename)
+    elif isinstance(filename, Path):
+        filename: Path = filename
+    else:
+        raise ValueError(
+            f"Invalid filename type: {type(filename)}. Expected str or Path."
+        )
 
     if not filename.exists():
         raise FileNotFoundError(f"File {filename} does not exist.")
@@ -101,7 +107,7 @@ def process_pdf(
     if (ocr_backend and not use_ocr) or (use_ocr and not ocr_backend):
         raise ValueError("Both ocr_backend and use_ocr must be provided together.")
 
-    tmp_output: Path | None = output
+    tmp_output: Path
     if not output:
         # use a temp dir with a random id as filename
         tmp_output = Path(tempfile.gettempdir()) / f"{uuid.uuid4()}.pdf"
@@ -111,6 +117,8 @@ def process_pdf(
         raise ValueError(
             f"Unsupported output format: {output.suffix}. Supported format is .pdf."
         )
+    else:
+        tmp_output = output
 
     if pdf_backend not in ["markitdown", "pymupdf4llm", "docling", "ocr_backend"]:
         raise ValueError(f"Unsupported PDF backend: {pdf_backend}")
@@ -126,7 +134,7 @@ def process_pdf(
             " which needs to be parsed by the pdf_backend. Use 'markitdown' or 'pymupdf4llm' instead."
         )
 
-    extracted_text: str | None = None
+    extracted_text: str = ""
 
     if use_ocr:
         if ocr_backend not in ["ocrmypdf", "surya-ocr", "doclingvlm"]:
@@ -174,13 +182,10 @@ def process_pdf(
                 recognition_predictor = RecognitionPredictor()
                 detection_predictor = DetectionPredictor()
 
-                langs = None  # TODO
-
                 images = pdf_to_images(filename)
 
                 predictions = recognition_predictor(
                     images,
-                    langs=[langs] * len(images),
                     det_predictor=detection_predictor,
                 )
 
@@ -286,7 +291,7 @@ def process_pdf(
                 f"OCR backend {ocr_backend} is not implemented yet."
             )
     else:
-        tmp_output = filename
+        tmp_output: Path = filename
 
     if pdf_backend == "markitdown":
         if client and llm_model:
@@ -340,27 +345,27 @@ def process_pdf(
 
     if output:
         # copy tmp_output to output
-        if tmp_output != output:
+        if tmp_output and tmp_output != output:
             tmp_output.rename(output)
             if verbose:
                 print(f"Temporary file {tmp_output} renamed to {output}.")
     else:
         # remove tmp_output
-        if tmp_output.exists():
+        if tmp_output and tmp_output.exists():
             tmp_output.unlink()
             if verbose:
                 print(f"Temporary file {tmp_output} removed.")
 
     if output_file:
         return extracted_text, pdf_file
-    return extracted_text
+    return extracted_text, None
 
 
 def preprocess_file(
     filename: Path | str,
-    output: Path = None,
-    base_url: str = None,
-    api_key: str = None,
+    output: Path | None = None,
+    base_url: str | None = None,
+    api_key: str | None = None,
     client: openai.OpenAI | None = None,
     llm_model: str | None = None,
     pdf_backend: str | None = "markitdown",
@@ -467,7 +472,7 @@ def preprocess_file(
 
         if string_is_empty_or_garbage(extracted_text) and use_ocr:
             print("PDF: No text found, trying OCR...")
-            extracted_text = process_pdf(
+            extracted_text, _ = process_pdf(
                 filename,
                 output,
                 pdf_backend=pdf_backend or "markitdown",
@@ -484,7 +489,7 @@ def preprocess_file(
             raise ValueError(f"PDF {filename} is empty and no OCR was requested.")
         elif not string_is_empty_or_garbage(extracted_text) and use_ocr:
             print("PDF: Text found, OCR will be re-done and forced.")
-            extracted_text = process_pdf(
+            extracted_text, _ = process_pdf(
                 filename,
                 output,
                 pdf_backend=pdf_backend or "markitdown",
