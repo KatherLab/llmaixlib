@@ -754,7 +754,7 @@ surya = [
 
 [package.metadata]
 requires-dist = [
-    { name = "click", specifier = "~=8.1.8" },
+    { name = "click", specifier = ">=8.1.8,<8.3.0" },
     { name = "docling", marker = "extra == 'docling'", specifier = "~=2.33.0" },
     { name = "hatchling", specifier = "~=1.27.0" },
     { name = "markdown-pdf", marker = "extra == 'docling'", specifier = "~=1.7" },
