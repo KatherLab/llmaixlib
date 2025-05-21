@@ -267,7 +267,7 @@ wheels = [
 
 [[package]]
 name = "docling"
-version = "2.32.0"
+version = "2.33.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
@@ -297,9 +297,9 @@ dependencies = [
     { name = "tqdm", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
     { name = "typer", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d5/0e/188f6abe8c35037519fa8231927ba2ddfd90f93844c3c575f589c85f84a4/docling-2.32.0.tar.gz", hash = "sha256:ae5838c6411238dfc2640069af77e73028a0ea6b40718ee5f8fa84776d7265d2", size = 129391, upload-time = "2025-05-14T14:29:33.656Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/d8/76740f7d40a28794365e76029e7379f7d1b5994e24aaac899c3bb280e426/docling-2.33.0.tar.gz", hash = "sha256:40c27df6a7f90b8fb4279a4094ac26c48f3dbd38ceda0d3208e6d63eda2e8660", size = 132120, upload-time = "2025-05-20T19:56:06.46Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/d4/669f4ae41634f40a62a0c727a2ad0bb8e78d41e1d08a865073355c54d523/docling-2.32.0-py3-none-any.whl", hash = "sha256:0015e07ce0a55c49d9c1da2658a21db3cbdcbd05fbc856d545f8088c15803048", size = 166716, upload-time = "2025-05-14T14:29:31.637Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/23/6dddf454610c4dff5799f9becbbc752b8595169de57c02a1d39067f5f2b5/docling-2.33.0-py3-none-any.whl", hash = "sha256:6c0ee223c5da551adc5da15aae205aaebf78222780198cb5a21c85648da618ba", size = 169441, upload-time = "2025-05-20T19:56:04.806Z" },
 ]
 
 [[package]]
@@ -755,27 +755,27 @@ surya = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = "~=8.1.8" },
-    { name = "docling", marker = "extra == 'docling'", specifier = "~=2.32.0" },
+    { name = "docling", marker = "extra == 'docling'", specifier = "~=2.33.0" },
     { name = "hatchling", specifier = "~=1.27.0" },
     { name = "markdown-pdf", marker = "extra == 'docling'", specifier = "~=1.7" },
     { name = "markitdown", extras = ["docx", "xlsx", "xls", "pdf"], specifier = "~=0.1.1" },
     { name = "ocrmypdf", specifier = "~=16.10.1" },
-    { name = "openai", specifier = "~=1.78.1" },
+    { name = "openai", specifier = "~=1.79.0" },
     { name = "pymupdf", specifier = "==1.25.3" },
     { name = "pymupdf4llm", specifier = "~=0.0.17" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
-    { name = "surya-ocr", marker = "extra == 'surya'", specifier = "~=0.14.0" },
+    { name = "surya-ocr", marker = "extra == 'surya'", specifier = "~=0.14.2" },
 ]
 provides-extras = ["dev", "surya", "docling"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = ">=0.11.10" }]
 docling = [
-    { name = "docling", specifier = "~=2.32.0" },
+    { name = "docling", specifier = "~=2.33.0" },
     { name = "markdown-pdf", specifier = "~=1.7" },
 ]
-surya = [{ name = "surya-ocr", specifier = "~=0.14.0" }]
+surya = [{ name = "surya-ocr", specifier = "~=0.14.2" }]
 
 [[package]]
 name = "lxml"
@@ -1261,7 +1261,7 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "1.78.1"
+version = "1.79.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
@@ -1273,9 +1273,9 @@ dependencies = [
     { name = "tqdm", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
     { name = "typing-extensions", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a4/3f/4e5e7b0548a15eabc4a755c93cd5f9564887e3d2fd45b6ff531352e5859d/openai-1.78.1.tar.gz", hash = "sha256:8b26b364531b100df1b961d03560042e5f5be11301d7d49a6cd1a2b9af824dca", size = 442985, upload-time = "2025-05-12T09:59:51.098Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/52/cf/4901077dbbfd0d82a814d721600fa0c3a61a093d7f0bf84d0e4732448dc9/openai-1.79.0.tar.gz", hash = "sha256:e3b627aa82858d3e42d16616edc22aa9f7477ee5eb3e6819e9f44a961d899a4c", size = 444736, upload-time = "2025-05-16T19:49:59.738Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/4c/3889bc332a6c743751eb78a4bada5761e50a8a847ff0e46c1bd23ce12362/openai-1.78.1-py3-none-any.whl", hash = "sha256:7368bf147ca499804cc408fe68cdb6866a060f38dec961bbc97b04f9d917907e", size = 680917, upload-time = "2025-05-12T09:59:48.948Z" },
+    { url = "https://files.pythonhosted.org/packages/81/d2/e3992bb7c6641b765c1008e3c96e076e0b50381be2cce344e6ff177bad80/openai-1.79.0-py3-none-any.whl", hash = "sha256:d5050b92d5ef83f869cb8dcd0aca0b2291c3413412500eec40c66981b3966992", size = 683334, upload-time = "2025-05-16T19:49:57.445Z" },
 ]
 
 [[package]]
@@ -2129,7 +2129,7 @@ wheels = [
 
 [[package]]
 name = "surya-ocr"
-version = "0.14.0"
+version = "0.14.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
@@ -2146,9 +2146,9 @@ dependencies = [
     { name = "torch", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
     { name = "transformers", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine == 'amd64' and sys_platform == 'win32')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/ab/7a4c408ad0fb4a5d266544e2516b3ba35af15f0525e6ac7236c4a4b914d2/surya_ocr-0.14.0.tar.gz", hash = "sha256:3e8dd8bbff5029d2645fdce05a9cec1876171fabde6496e188db98127715fe37", size = 146678, upload-time = "2025-05-13T20:36:31.519Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/68/8a91aa358ed051e4cd6431d6e643fddd8f57fd6b9b8e0b81de081d3a01a8/surya_ocr-0.14.2.tar.gz", hash = "sha256:852af681073167beba9a638658c70b81318f1a8f3d558db68dead1b2c391e862", size = 147741, upload-time = "2025-05-20T16:07:44.573Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/8c/adc047b5208073d59231cb328ecacba3f81b9c328bbda320ecd49a076dc7/surya_ocr-0.14.0-py3-none-any.whl", hash = "sha256:1efd31fb8657a22f48d62d915c6653b840e1079d577968cd1d98e5017b603c19", size = 174004, upload-time = "2025-05-13T20:36:30.147Z" },
+    { url = "https://files.pythonhosted.org/packages/38/f1/33830aa0fc9e066b0fdcb2a3956f1d438379dfe3dc90234e1fcf426a281c/surya_ocr-0.14.2-py3-none-any.whl", hash = "sha256:0c402705c860f8bf98fc2bf2a3b49d7f0e16fba587aed6d3f01bb53bb776d283", size = 174923, upload-time = "2025-05-20T16:07:43.391Z" },
 ]
 
 [[package]]

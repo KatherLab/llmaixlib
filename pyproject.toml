@@ -20,7 +20,7 @@ dependencies = [
     "pymupdf==1.25.3",
     "pymupdf4llm~=0.0.17",
     "ocrmypdf~=16.10.1",
-    "openai~=1.78.1",
+    "openai~=1.79.0",
     "pytest>=8.3.5",
     "hatchling~=1.27.0",
 ]
@@ -45,18 +45,18 @@ dev = [
     "ruff>=0.11.10",
 ]
 surya = [
-    "surya-ocr~=0.14.0",
+    "surya-ocr~=0.14.2",
 ]
 docling = [
-    "docling~=2.32.0",
+    "docling~=2.33.0",
     "markdown-pdf~=1.7",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3.5"]
-surya = ["surya-ocr~=0.14.0"]
+surya = ["surya-ocr~=0.14.2"]
 docling = [
-    "docling~=2.32.0",
+    "docling~=2.33.0",
     "markdown-pdf~=1.7",
 ]
 
