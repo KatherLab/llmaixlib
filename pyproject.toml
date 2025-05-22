@@ -20,7 +20,7 @@ dependencies = [
     "pymupdf==1.25.3",
     "pymupdf4llm~=0.0.17",
     "ocrmypdf~=16.10.1",
-    "openai~=1.79.0",
+    "openai~=1.81.0",
     "pytest>=8.3.5",
     "hatchling~=1.27.0",
 ]
