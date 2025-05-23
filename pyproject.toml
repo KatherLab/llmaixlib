@@ -20,7 +20,7 @@ dependencies = [
     "pymupdf==1.25.3",
     "pymupdf4llm~=0.0.17",
     "ocrmypdf~=16.10.1",
-    "openai~=1.81.0",
+    "openai~=1.82.0",
     "pytest>=8.3.5",
     "hatchling~=1.27.0",
 ]
@@ -42,7 +42,7 @@ packages = ["src/llmaix"]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.11.10",
+    "ruff>=0.11.11",
 ]
 surya = [
     "surya-ocr~=0.14.2",
