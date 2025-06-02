@@ -52,7 +52,7 @@ surya = [
     "surya-ocr~=0.14.3",
 ]
 docling = [
-    "docling~=2.33.0",
+    "docling>=2.33,<2.36",
     "markdown-pdf~=1.7",
 ]
 

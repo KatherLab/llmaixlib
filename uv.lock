@@ -785,7 +785,7 @@ dev = [
     { name = "ty", specifier = "~=0.0.1a8" },
 ]
 docling = [
-    { name = "docling", specifier = "~=2.33.0" },
+    { name = "docling", specifier = ">=2.33,<2.36" },
     { name = "markdown-pdf", specifier = "~=1.7" },
 ]
 surya = [{ name = "surya-ocr", specifier = "~=0.14.3" }]
