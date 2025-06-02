@@ -12,7 +12,7 @@ def get_commit_hash():
     try:
         return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('utf-8').strip()
     except Exception as e:
-        return "unknown"
+        return "Could not retrieve commit hash: " + str(e)
 
 def get_version():
     commit_hash = get_commit_hash()
