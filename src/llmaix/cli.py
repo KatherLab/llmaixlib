@@ -1,12 +1,25 @@
 # src/llmaix/cli.py
+import subprocess
+
 import click
 from dotenv import load_dotenv
 
+from .__version__ import __version__
 from .preprocess import preprocess_file
 from .extract import extract_info
 
+def get_commit_hash():
+    try:
+        return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('utf-8').strip()
+    except Exception as e:
+        return "unknown"
+
+def get_version():
+    commit_hash = get_commit_hash()
+    return f"{__version__} ({commit_hash})"
 
 @click.group()
+@click.version_option(get_version(), message='%(prog)s %(version)s')
 def main():
     """LLMAIx CLI"""
     pass

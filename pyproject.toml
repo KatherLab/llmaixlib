@@ -1,6 +1,6 @@
 [project]
 name = "llmaix"
-version = "0.0.5"
+version = "0.0.6"
 authers = [
     {name = "Fabian Wolf", email = "fabian.wolf2@tu-dresden.de"}
 ]
@@ -36,6 +36,9 @@ build-backend = "hatchling.build"
 
 [project.scripts]
 llmaix = "llmaix.cli:main"
+
+[tool.hatch.version]
+path = "src/llmaix/__version__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llmaix"]
