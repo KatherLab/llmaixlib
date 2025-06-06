@@ -1,8 +1,102 @@
-from pathlib import Path
+import io
 from typing import Any
-
-import fitz
 from PIL import Image
+from markdown_it import MarkdownIt
+import fitz
+from pathlib import Path
+from typing import Optional, Tuple, Union
+
+
+class MarkdownSection:
+    def __init__(
+        self,
+        text: str,
+        toc: bool = True,
+        root: str = ".",
+        paper_size: str = "A4",
+        margins: Tuple[int, int, int, int] = (36, 36, -36, -36),
+    ):
+        self.text = text
+        self.toc = toc
+        self.root = root
+        self.paper_size = paper_size
+        self.margins = margins
+
+
+class PdfConverter:
+    meta = {
+        "creationDate": fitz.get_pdf_now(),
+        "modDate": fitz.get_pdf_now(),
+        "creator": "llmaix library using pymupdf and markdown-it",
+        "producer": None,
+        "title": None,
+        "author": None,
+        "subject": None,
+        "keywords": None,
+    }
+
+    def __init__(
+        self,
+        toc_depth: int = 6,
+        parser_mode: str = "commonmark",
+        optimize: bool = False,
+    ):
+        self.toc_depth = toc_depth
+        self.toc = []
+        self.parser = MarkdownIt(parser_mode).enable("table")
+        self.optimize = optimize
+        self.buffer = io.BytesIO()
+        self.writer = fitz.DocumentWriter(self.buffer)
+        self.page_count = 0
+        self.links = []
+
+    @staticmethod
+    def _position_recorder(position):
+        position.page_num = position.pdf.page_count
+        position.pdf.links.append(position)
+        if not position.open_close & 1:
+            return
+        if not position.toc:
+            return
+        if 0 < position.heading <= position.pdf.toc_depth:
+            position.pdf.toc.append(
+                (
+                    position.heading,
+                    position.text,
+                    position.pdf.page_count,
+                    position.rect[1],
+                )
+            )
+
+    def add_markdown(self, section: MarkdownSection, css: Optional[str] = None) -> str:
+        rect = fitz.paper_rect(section.paper_size)
+        area = rect + section.margins
+        html = self.parser.render(section.text)
+        story = fitz.Story(html=html, archive=section.root, user_css=css)
+        more = 1
+        while more:
+            self.page_count += 1
+            device = self.writer.begin_page(rect)
+            more, _ = story.place(area)
+            story.element_positions(
+                self._position_recorder, {"toc": section.toc, "pdf": self}
+            )
+            story.draw(device)
+            self.writer.end_page()
+        return html
+
+    def save_to_file(self, file_path: Union[str, Path]) -> None:
+        self.writer.close()
+        self.buffer.seek(0)
+        doc = fitz.Story.add_pdf_links(self.buffer, self.links)
+        doc.set_metadata(self.meta)
+        if self.toc_depth > 0:
+            doc.set_toc(self.toc)
+        if self.optimize:
+            doc.ez_save(str(file_path))
+        else:
+            doc.save(str(file_path))
+        doc.close()
 
 
 def scale_bbox(bbox: list[float], src_dpi: int = 96, dst_dpi: int = 72) -> list[float]:
@@ -66,7 +160,6 @@ def add_text_layer_to_pdf_surya(
     full_text = ""
     for page_num, page_ocr in enumerate(ocr_results):
         page = pdf_document[page_num]
-        # breakpoint()
         for line in page_ocr.text_lines:
             bbox = scale_bbox(line.bbox, src_dpi, dst_dpi)
             text = line.text
@@ -230,15 +323,9 @@ def markdown_to_pdf(markdown_text, output_path: Path | str) -> Path:
     if not isinstance(output_path, Path):
         output_path = Path(output_path)
 
-    from markdown_pdf import MarkdownPdf, Section
-
-    # Create PDF object
-    pdf = MarkdownPdf()
-
-    # Add markdown content as a section
-    pdf.add_section(Section(markdown_text))
-
-    # Save to file
-    pdf.save(output_path)
+    converter = PdfConverter()
+    section = MarkdownSection(markdown_text)
+    converter.add_markdown(section)
+    converter.save_to_file(output_path)
 
     return output_path

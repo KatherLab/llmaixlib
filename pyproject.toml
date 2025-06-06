@@ -1,6 +1,6 @@
 [project]
 name = "llmaix"
-version = "0.0.6"
+version = "0.0.7"
 authers = [
     {name = "Fabian Wolf", email = "fabian.wolf2@tu-dresden.de"}
 ]
@@ -16,12 +16,12 @@ license-files = ["LICEN[CS]E*"]
 
 dependencies = [
     "markitdown[docx, xlsx, xls, pdf]~=0.1.2",
-    "click~=8.1.8",
-    "pymupdf==1.25.3",
-    "pymupdf4llm~=0.0.17",
+    "click~=8.2.1",
+    "pymupdf~=1.26.0",
+    "pymupdf4llm==0.0.24",
     "ocrmypdf~=16.10.2",
-    "openai~=1.82.1",
-    "pytest>=8.3.5",
+    "openai~=1.84.0",
+    "pytest>=8.4.0",
     "hatchling~=1.27.0",
 ]
 
@@ -45,23 +45,28 @@ packages = ["src/llmaix"]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.11.12",
-    "ty~=0.0.1a8"
+    "ruff>=0.11.13",
+    "ty~=0.0.1a8",
+    "pytest~=8.4.0",
+    "pytest-cov~=6.1.1",
 ]
 surya = [
-    "surya-ocr~=0.14.3",
+    "surya-ocr~=0.14.5",
 ]
 docling = [
-    "docling~=2.33.0",
-    "markdown-pdf~=1.7",
+    "docling~=2.36.1",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3.5"]
-surya = ["surya-ocr~=0.14.3"]
+dev = [
+    "pytest~=8.4.0",
+    "pytest-cov~=6.1.1",
+    "ruff~=0.11.13",
+    "ty~=0.0.1a8",
+]
+surya = ["surya-ocr~=0.14.5"]
 docling = [
-    "docling~=2.33.0",
-    "markdown-pdf~=1.7",
+    "docling~=2.36.1",
 ]
 
 [tool.pytest.ini_options]
