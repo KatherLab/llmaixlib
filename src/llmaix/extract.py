@@ -293,6 +293,11 @@ def extract_info(
                         "The model's response was too long and was truncated. "
                         "Please increase the max_completion_tokens parameter."
                     )
+                if not completion.choices or not completion.choices[0].message.content:
+                    raise ValueError(
+                        "The model did not return any content. "
+                        "Please check your prompt, messages, or model settings."
+                    )
                 try:
                     return json.loads(completion.choices[0].message.content)
                 except json.JSONDecodeError as e:
