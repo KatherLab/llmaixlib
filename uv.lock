@@ -823,7 +823,7 @@ dev = [
     { name = "ruff", specifier = ">=0.11.13" },
     { name = "ty", specifier = "~=0.0.1a10" },
 ]
-docling = [{ name = "docling", specifier = "~=2.36.1" }]
+docling = [{ name = "docling", specifier = ">=2.36.1,<2.38.0" }]
 surya = [{ name = "surya-ocr", specifier = "~=0.14.6" }]
 
 [[package]]

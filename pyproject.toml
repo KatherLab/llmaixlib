@@ -54,7 +54,7 @@ surya = [
     "surya-ocr~=0.14.6",
 ]
 docling = [
-    "docling~=2.36.1",
+    "docling>=2.36.1,<2.38.0",
 ]
 
 [project.optional-dependencies]
