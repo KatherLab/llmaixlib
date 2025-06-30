@@ -313,11 +313,7 @@ def process_pdf(
                 MarkItDown(enable_plugins=True).convert(tmp_output).text_content
             )
     elif pdf_backend == "pymupdf4llm":
-        if use_ocr and ocr_backend in ["ocrmypdf"]:
-            # TODO: Workaround, ignoring images, otherwise no text is extracted from tesseract documents https://github.com/pymupdf/RAG/issues/280
-            extracted_text = pymupdf4llm.to_markdown(tmp_output, ignore_images=True)
-        else:
-            extracted_text = pymupdf4llm.to_markdown(tmp_output)
+        extracted_text = pymupdf4llm.to_markdown(tmp_output)
     elif pdf_backend == "ocr_backend":
         if not extracted_text:
             raise ValueError(

@@ -20,7 +20,7 @@ dependencies = [
     "pymupdf~=1.26.1",
     "pymupdf4llm==0.0.25",
     "ocrmypdf~=16.10.2",
-    "openai>=1.88.0",
+    "openai>=1.93.0",
     "pytest>=8.4.1",
     "hatchling~=1.27.0",
 ]
@@ -45,8 +45,8 @@ packages = ["src/llmaix"]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.12.0",
-    "ty~=0.0.1a11",
+    "ruff>=0.12.1",
+    "ty~=0.0.1a12",
     "pytest~=8.4.1",
     "pytest-cov~=6.2.1",
 ]
@@ -54,19 +54,19 @@ surya = [
     "surya-ocr~=0.14.6",
 ]
 docling = [
-    "docling~=2.37.0",
+    "docling~=2.39.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest~=8.4.1",
     "pytest-cov~=6.2.1",
-    "ruff~=0.12.0",
-    "ty~=0.0.1a11",
+    "ruff~=0.12.1",
+    "ty~=0.0.1a12",
 ]
 surya = ["surya-ocr~=0.14.6"]
 docling = [
-    "docling~=2.37.0",
+    "docling~=2.39.0",
 ]
 
 [tool.pytest.ini_options]
