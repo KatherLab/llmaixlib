@@ -18,7 +18,7 @@ dependencies = [
     "markitdown[docx, xlsx, xls, pdf]~=0.1.2",
     "click~=8.2.1",
     "pymupdf~=1.26.1",
-    "pymupdf4llm==0.0.25",
+    "pymupdf4llm==0.0.26",
     "ocrmypdf~=16.10.2",
     "openai>=1.93.0",
     "pytest>=8.4.1",
