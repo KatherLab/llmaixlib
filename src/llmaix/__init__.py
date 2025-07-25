@@ -1,4 +1,4 @@
-from .preprocess import preprocess_file
+from .preprocess import DocumentPreprocessor
 from .extract import extract_info
 
-__all__ = ["preprocess_file", "extract_info"]
+__all__ = ["DocumentPreprocessor", "extract_info"]

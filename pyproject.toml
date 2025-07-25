@@ -22,7 +22,8 @@ dependencies = [
   "ocrmypdf~=16.10.4",
   "openai>=1.97.1",
   "pytest>=8.4.1",
-  "hatchling~=1.27.0"
+  "hatchling~=1.27.0",
+  "filetype>=1.2.0"
 ]
 
 [project.urls]
@@ -46,7 +47,7 @@ packages = ["src/llmaix"]
 [dependency-groups]
 dev = [
   "ruff>=0.12.5",
-  "ty~=0.0.1a15",
+  "ty~=0.0.1a16",
   "pytest~=8.4.1",
   "pytest-cov~=6.2.1",
 ]

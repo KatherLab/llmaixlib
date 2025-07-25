@@ -1,55 +1,75 @@
-from pathlib import Path
-from typing import Optional, Tuple, List
+"""
+Wrappers around different OCR back‑ends used by the preprocessing pipeline.
 
+Exports
+-------
+* run_tesseract_ocr
+* run_paddleocr
+* run_suryaocr
+
+Every function returns **pure text** (`str`), never a tuple. Any paths to
+intermediate OCR PDFs are handled internally and, if needed, by the caller.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional, List
+
+# ---------------------------------------------------------------------------
+# Tesseract via ocrmypdf
+# ---------------------------------------------------------------------------
 
 def run_tesseract_ocr(
-    pdf_path: Path, languages: Optional[List[str]] = None, force_ocr: bool = False
-) -> Tuple[str, Path]:
+    pdf_path: Path,
+    languages: Optional[List[str]] = None,
+    force_ocr: bool = False,
+) -> str:
     """
-    Use Tesseract OCR via ocrmypdf, then extract text with pymupdf4llm.
+    Run Tesseract OCR using *ocrmypdf* and return extracted Markdown.
 
-    Args:
-        pdf_path: Path to the input PDF.
-        languages: List of language codes (e.g., ['eng', 'deu']).
-        force: If True, force OCR even if text is present.
-
-    Returns:
-        (extracted_text, path_to_ocr_pdf)
+    Parameters
+    ----------
+    pdf_path:
+        Source PDF file (will not be modified).
+    languages:
+        List of Tesseract language codes (e.g. ``['eng', 'deu']``).
+    force_ocr:
+        Passes ``--force-ocr`` to ocrmypdf even if text is already present.
     """
     import ocrmypdf
     import pymupdf4llm
 
-    tmp = pdf_path.with_name(pdf_path.stem + "_ocr.pdf")
-    kwargs = {}
-    # TODO: Pass languages
+    ocr_pdf = pdf_path.with_name(f"{pdf_path.stem}_ocr.pdf")
+    kwargs = {"force_ocr": force_ocr}
     if languages:
-        kwargs["language"] = languages
-    if force_ocr:
-        kwargs["force_ocr"] = True
-    ocrmypdf.ocr(str(pdf_path), str(tmp), force_ocr=force_ocr)
-    text = pymupdf4llm.to_markdown(tmp)
-    return text, tmp
+        kwargs["language"] = "+".join(languages)
+    ocrmypdf.ocr(str(pdf_path), str(ocr_pdf), **kwargs)
+    return pymupdf4llm.to_markdown(ocr_pdf)
 
+
+# ---------------------------------------------------------------------------
+# PaddleOCR PP‑Structure
+# ---------------------------------------------------------------------------
 
 def run_paddleocr(
     pdf_path: Path,
-    languages: Optional[list] = None,
-    max_image_dim: int = 800
-) -> Tuple[str, Optional[Path]]:
+    languages: Optional[List[str]] = None,
+    max_image_dim: int = 800,
+) -> str:
     """
-    Use PaddleOCR PPStructureV3 for advanced OCR with layout/table detection.
+    Perform advanced OCR with PaddleOCR PP‑Structure V3.
 
-    Raises an exception if anything goes wrong (missing dependency, error in pipeline, etc).
+    Returns Markdown combining text, table, and formula layout where possible.
     """
     import warnings
-
+    from pathlib import Path as _P
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",
-                message="invalid escape sequence '\\W'",
+                message="invalid escape sequence '\\\\W'",
                 category=SyntaxWarning,
-                module="paddlex"
+                module="paddlex",
             )
             from paddleocr import PPStructureV3
             import numpy as np
@@ -60,9 +80,8 @@ def run_paddleocr(
                 use_doc_orientation_classify=False,
                 use_doc_unwarping=False,
             )
-
-            results = []
-            with fitz.open(pdf_path) as doc:
+            results: list[str] = []
+            with fitz.open(_P(pdf_path)) as doc:
                 for page in doc:
                     pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
                     img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
@@ -70,7 +89,6 @@ def run_paddleocr(
                         img.thumbnail((max_image_dim, max_image_dim), Image.Resampling.LANCZOS)
                     output = pipeline.predict(np.array(img))
                     for res in output:
-                        # Robust markdown extraction
                         if isinstance(res, dict):
                             md = res.get("markdown_texts") or res.get("markdown") or str(res)
                         elif hasattr(res, "markdown_texts") and res.markdown_texts:
@@ -80,70 +98,54 @@ def run_paddleocr(
                         else:
                             md = str(res)
                         results.append(md)
-            return "\n\n".join(results), None
-
-    except ImportError as e:
+            return "\n\n".join(results)
+    except ImportError as e:  # pragma: no cover
         raise RuntimeError(
-            "PaddleOCR (paddleocr) or one of its dependencies is not installed. "
-            "Install with `pip install paddleocr`.\nOriginal error: " + str(e)
+            "PaddleOCR (paddleocr) not installed. Install with `pip install paddleocr`."
         ) from e
-    except Exception as e:
-        raise RuntimeError(
-            f"PaddleOCR failed on {pdf_path}: {e}"
-        ) from e
+    except Exception as e:  # pragma: no cover
+        raise RuntimeError(f"PaddleOCR failed on {pdf_path}: {e}") from e
 
+
+# ---------------------------------------------------------------------------
+# Surya‑OCR
+# ---------------------------------------------------------------------------
 
 def run_suryaocr(
     pdf_path: Path,
-    languages: Optional[List[str]] = None,
-    max_image_dim: int = 800
-) -> Tuple[str, Optional[Path]]:
+    languages: Optional[List[str]] = None,  # auto‑detect; kept for API symmetry
+    max_image_dim: int = 800,
+) -> str:
     """
-    Use Surya-OCR v0.14.x+ for text recognition and line layout.
-
-    Args:
-        pdf_path: Path to PDF file.
-        languages: Ignored (Surya auto-detects).
-        max_image_dim: Maximum width or height for images (resized for speed/memory).
-
-    Returns:
-        (extracted_text, None)
+    Run Surya‑OCR v0.14+ and return plain text (one line per OCR line).
     """
     from surya.recognition import RecognitionPredictor
     from surya.detection import DetectionPredictor
     import fitz
     from PIL import Image
 
-    # Use cached predictors to avoid re-loading models
-    if not hasattr(run_suryaocr, "_recognition_predictor"):
-        run_suryaocr._recognition_predictor = RecognitionPredictor()
-    if not hasattr(run_suryaocr, "_detection_predictor"):
-        run_suryaocr._detection_predictor = DetectionPredictor()
+    # cache models
+    if not hasattr(run_suryaocr, "_recog"):
+        run_suryaocr._recog = RecognitionPredictor()  # type: ignore[attr-defined]
+        run_suryaocr._detect = DetectionPredictor()    # type: ignore[attr-defined]
 
-    recog = run_suryaocr._recognition_predictor
-    detect = run_suryaocr._detection_predictor
+    recog = run_suryaocr._recog  # type: ignore[attr-defined]
+    detect = run_suryaocr._detect  # type: ignore[attr-defined]
 
+    images = []
     with fitz.open(pdf_path) as doc:
-        images = []
         for page in doc:
             pix = page.get_pixmap()
             img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
             if max(img.size) > max_image_dim:
                 img.thumbnail((max_image_dim, max_image_dim), Image.Resampling.LANCZOS)
             images.append(img)
-    # Surya: batch prediction (returns List[OCRResult])
-    predictions = recog(images, det_predictor=detect)
 
-    # Each OCRResult object should have .text_lines (list of line objects/dicts)
-    text = ""
+    predictions = recog(images, det_predictor=detect)
+    lines: list[str] = []
     for page_pred in predictions:
         if hasattr(page_pred, "text_lines"):
-            for line in page_pred.text_lines:
-                value = getattr(line, "text", None)
-                if value is None and isinstance(line, dict):
-                    value = line.get("text", "")
-                if value:
-                    text += value + "\n"
-        text += "\n"
-    return text.strip(), None
+            lines.extend(line.text for line in page_pred.text_lines)
+        lines.append("")  # page break
 
+    return "\n".join(lines).strip()

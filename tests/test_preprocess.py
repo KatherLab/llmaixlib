@@ -1,8 +1,12 @@
 # tests/test_preprocess.py
+import os
 
 import pytest
-from llmaix.preprocess import preprocess_file
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+from llmaix.preprocess import DocumentPreprocessor
 
 PDF_WITH_TEXT = Path("tests/testfiles/9874562_text.pdf")
 PDF_NO_TEXT = Path("tests/testfiles/9874562_notext.pdf")
@@ -12,33 +16,46 @@ TXT_FILE = Path("tests/testfiles/9874562.txt")
 IMG_FILE = Path("tests/testfiles/9874562.png")
 
 
+def run_preprocess(source, **kwargs):
+    """
+    Convenience wrapper so tests can call the pipeline in one line.
+
+    `source` is passed to `DocumentPreprocessor.process`, every other keyword
+    argument goes into the constructor.
+    """
+    proc = DocumentPreprocessor(**{k: v for k, v in kwargs.items()})
+    return proc.process(source)
+
+
 @pytest.mark.parametrize("mode", ["fast", "advanced"])
 def test_preprocess_pdf_with_text(mode):
-    result = preprocess_file(PDF_WITH_TEXT, mode=mode)
+    result = run_preprocess(PDF_WITH_TEXT, mode=mode)
     assert "Medical History" in result
 
 
 @pytest.mark.parametrize("ocr_engine", ["ocrmypdf", "paddleocr", "surya"])
 @pytest.mark.parametrize("mode", ["fast", "advanced"])
 def test_preprocess_pdf_needs_ocr(ocr_engine, mode):
-    result = preprocess_file(PDF_NO_TEXT, mode=mode, ocr_engine=ocr_engine)
+    result = run_preprocess(PDF_NO_TEXT, mode=mode, ocr_engine=ocr_engine)
     assert "Medical History" in result
 
 
 def test_preprocess_pdf_with_force_ocr():
-    # Even if text exists, should OCR
-    result = preprocess_file(PDF_WITH_TEXT, mode="fast", ocr_engine="ocrmypdf")
-    # Should use direct extraction (not OCR), still succeeds
+    # text layer present → direct extraction
+    result = run_preprocess(PDF_WITH_TEXT, mode="fast", ocr_engine="ocrmypdf")
     assert "Medical History" in result
 
-    # Now force OCR
-    result2 = preprocess_file(PDF_WITH_TEXT, mode="fast", ocr_engine="ocrmypdf")
+    # force OCR regardless
+    result2 = run_preprocess(
+        PDF_WITH_TEXT, mode="fast", ocr_engine="ocrmypdf", force_ocr=True
+    )
     assert "Medical History" in result2
 
 
 def test_preprocess_pdf_misleading_text_and_force_ocr():
-    # Should fall back to OCR and still work
-    result = preprocess_file(PDF_MISLEADING_TEXT, mode="fast", ocr_engine="ocrmypdf", force_ocr=True)
+    result = run_preprocess(
+        PDF_MISLEADING_TEXT, mode="fast", ocr_engine="ocrmypdf", force_ocr=True
+    )
     assert "Medical History" in result
 
 
@@ -51,48 +68,63 @@ def test_preprocess_pdf_misleading_text_and_force_ocr():
     ],
 )
 def test_preprocess_other_formats(file_path, expected):
-    # Will work in advanced mode (Docling)
-    result = preprocess_file(file_path, mode="advanced")
+    result = run_preprocess(file_path, mode="advanced")
     assert expected in result
 
 
-def test_preprocess_pdf_with_local_vlm(monkeypatch):
-    # Fake a local VLM model (simulate as if a local model is available)
-    result = preprocess_file(
+def test_preprocess_pdf_with_local_vlm():
+    result = run_preprocess(
         PDF_NO_TEXT,
         mode="advanced",
         use_local_vlm=True,
         local_vlm_repo_id="HuggingFaceTB/SmolVLM-256M-Instruct",
         enable_picture_description=True,
     )
-    assert "Medical History" in result or "image description" in result.lower()
+    assert result.strip()
+    assert "Ashley Park" in result or "image description" in result.lower()
 
 
-def test_preprocess_pdf_with_remote_vlm(monkeypatch):
-    # Simulate a remote API; you can provide a mock client with base_url/api_key attributes
-    class DummyClient:
-        base_url = "https://dummy"
-        api_key = "sk-test"
+def test_preprocess_pdf_with_remote_vlm():
+    # Try to load environment variables from .env file
+    load_dotenv()
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    openai_api_base = os.getenv("OPENAI_API_BASE")
+    openai_model = os.getenv("OPENAI_MODEL")
 
-    # In actual use, this will need a real remote endpoint
-    with pytest.raises(Exception):
-        preprocess_file(
+    if openai_api_key and openai_api_base and openai_model:
+        class DummyClient:
+            base_url = openai_api_base + "/chat/completions"
+            api_key = openai_api_key
+
+        result = run_preprocess(
             PDF_NO_TEXT,
             mode="advanced",
             llm_client=DummyClient(),
-            llm_model="gpt-4v",
+            llm_model=openai_model,
             enable_picture_description=True,
         )
+        assert "Ashley Park" in result
+    else:
+        class DummyClient:
+            base_url = "https://dummy"
+            api_key = "sk‑test"
+        with pytest.raises(Exception):
+            run_preprocess(
+                PDF_NO_TEXT,
+                mode="advanced",
+                llm_client=DummyClient(),
+                llm_model="gpt-4v",
+                enable_picture_description=True,
+            )
 
 
 def test_preprocess_pdf_as_bytes():
     with open(PDF_WITH_TEXT, "rb") as f:
-        result = preprocess_file(f.read(), mode="fast")
+        result = run_preprocess(f.read(), mode="fast")
     assert "Medical History" in result
 
 
 @pytest.mark.parametrize("file_path", [PDF_WITH_TEXT, PDF_NO_TEXT, DOCX_FILE])
 def test_output_text_format(file_path):
-    result = preprocess_file(file_path, mode="advanced", output_format="text")
-    # Should have no markdown symbols (naive test)
-    assert "#" not in result and "|" not in result or "Medical History" in result
+    result = run_preprocess(file_path, mode="advanced", output_format="text")
+    assert ("#" not in result and "|" not in result) or ("Medical History" in result)

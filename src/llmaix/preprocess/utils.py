@@ -1,13 +1,34 @@
+"""
+Utility helpers for the document‑preprocessing pipeline.
+
+Sections
+--------
+* Markdown → PDF conversion helpers
+* Bounding‑box scaling / font‑size estimation
+* OCR‑related helpers for Surya‑OCR text‑layering
+* String‑quality heuristics (entropy‑based garbage detection)
+* PDF → PIL image conversion
+
+All functions are pure and side‑effect free except where noted.
+"""
+from __future__ import annotations
+
 import io
-from typing import Any
+import math
+from pathlib import Path
+from typing import Any, Tuple, Union, List
+
+import fitz  # PyMuPDF
 from PIL import Image
 from markdown_it import MarkdownIt
-import fitz
-from pathlib import Path
-from typing import Optional, Tuple, Union
 
+
+# ---------------------------------------------------------------------------
+# Markdown → PDF helpers
+# ---------------------------------------------------------------------------
 
 class MarkdownSection:
+    """A logical section of Markdown to be rendered into PDF."""
     def __init__(
         self,
         text: str,
@@ -15,7 +36,7 @@ class MarkdownSection:
         root: str = ".",
         paper_size: str = "A4",
         margins: Tuple[int, int, int, int] = (36, 36, -36, -36),
-    ):
+    ) -> None:
         self.text = text
         self.toc = toc
         self.root = root
@@ -24,10 +45,22 @@ class MarkdownSection:
 
 
 class PdfConverter:
+    """
+    Convert one or more :class:`MarkdownSection` objects into a single PDF.
+
+    Parameters
+    ----------
+    toc_depth:
+        Maximum heading level to include in the table of contents (0 = none).
+    parser_mode:
+        Mode passed to `markdown_it.MarkdownIt` (default: "commonmark").
+    optimize:
+        If *True*, runs `fitz.Document.ez_save` for size optimization.
+    """
     meta = {
         "creationDate": fitz.get_pdf_now(),
         "modDate": fitz.get_pdf_now(),
-        "creator": "llmaix library using pymupdf and markdown-it",
+        "creator": "llmaix library using PyMuPDF and markdown-it",
         "producer": None,
         "title": None,
         "author": None,
@@ -40,18 +73,20 @@ class PdfConverter:
         toc_depth: int = 6,
         parser_mode: str = "commonmark",
         optimize: bool = False,
-    ):
+    ) -> None:
         self.toc_depth = toc_depth
-        self.toc = []
+        self.toc: list[list] = []
         self.parser = MarkdownIt(parser_mode).enable("table")
         self.optimize = optimize
         self.buffer = io.BytesIO()
         self.writer = fitz.DocumentWriter(self.buffer)
         self.page_count = 0
-        self.links = []
+        self.links: list[Any] = []
+
+    # -- internal ----------------------------------------------------------------
 
     @staticmethod
-    def _position_recorder(position):
+    def _position_recorder(position: Any) -> None:  # callback for Story.element_positions
         position.page_num = position.pdf.page_count
         position.pdf.links.append(position)
         if not position.open_close & 1:
@@ -68,7 +103,10 @@ class PdfConverter:
                 )
             )
 
-    def add_markdown(self, section: MarkdownSection, css: Optional[str] = None) -> str:
+    # -- public ------------------------------------------------------------------
+
+    def add_markdown(self, section: MarkdownSection, css: str | None = None) -> str:
+        """Render *section* onto one or more new pages."""
         rect = fitz.paper_rect(section.paper_size)
         area = rect + section.margins
         html = self.parser.render(section.text)
@@ -86,6 +124,7 @@ class PdfConverter:
         return html
 
     def save_to_file(self, file_path: Union[str, Path]) -> None:
+        """Write accumulated pages to *file_path*."""
         self.writer.close()
         self.buffer.seek(0)
         doc = fitz.Story.add_pdf_links(self.buffer, self.links)
@@ -99,42 +138,59 @@ class PdfConverter:
         doc.close()
 
 
-def scale_bbox(bbox: list[float], src_dpi: int = 96, dst_dpi: int = 72) -> list[float]:
+def markdown_to_pdf(markdown_text: str, output_path: Union[str, Path]) -> Path:
     """
-    Scales a bounding box from one DPI to another.
+    Convenience wrapper: convert *markdown_text* straight to a PDF file.
+    """
+    output_path = Path(output_path)
+    converter = PdfConverter()
+    converter.add_markdown(MarkdownSection(markdown_text))
+    converter.save_to_file(output_path)
+    return output_path
 
-    Args:
-        bbox (List[float]): The bounding box coordinates [x1, y1, x2, y2].
-        src_dpi (int, optional): The source DPI. Defaults to 96.
-        dst_dpi (int, optional): The destination DPI. Defaults to 72.
 
-    Returns:
-        List[float]: The scaled bounding box coordinates.
+# ---------------------------------------------------------------------------
+# Geometry helpers
+# ---------------------------------------------------------------------------
+
+def scale_bbox(bbox: List[float], src_dpi: int = 96, dst_dpi: int = 72) -> List[float]:
+    """
+    Scale bounding‑box coordinates when DPI changes.
+
+    Parameters
+    ----------
+    bbox:
+        ``[x1, y1, x2, y2]`` source rectangle.
+    src_dpi / dst_dpi:
+        Source and destination DPI values.
+
+    Returns
+    -------
+    Scaled bbox as a list of four floats.
     """
     scale_factor = dst_dpi / src_dpi
     return [coord * scale_factor for coord in bbox]
 
 
 def estimate_font_size(
-    bbox_width: float, text_length: int, char_width_to_height_ratio: float = 0.5
+    bbox_width: float,
+    text_length: int,
+    char_width_to_height_ratio: float = 0.5,
 ) -> float:
     """
-    Estimates the font size based on the bounding box width and text length.
+    Roughly guess a font‑size that will fit *text_length* characters in *bbox_width*.
 
-    Args:
-        bbox_width (float): The width of the bounding box.
-        text_length (int): The length of the text.
-        char_width_to_height_ratio (float, optional): The ratio of character width to height. Defaults to 0.5.
-
-    Returns:
-        float: The estimated font size.
+    Used when inserting an invisible OCR text layer.
     """
-    if text_length == 0:  # Prevent division by zero
-        return 12.0  # Default font size if no text is present
+    if text_length == 0:
+        return 12.0
     avg_char_width = bbox_width / text_length
-    font_size = avg_char_width / char_width_to_height_ratio
-    return font_size
+    return avg_char_width / char_width_to_height_ratio
 
+
+# ---------------------------------------------------------------------------
+# OCR helpers – Surya‑OCR post‑processing
+# ---------------------------------------------------------------------------
 
 def add_text_layer_to_pdf_surya(
     pdf_path: str | Path,
@@ -144,17 +200,9 @@ def add_text_layer_to_pdf_surya(
     dst_dpi: int = 72,
 ) -> str:
     """
-    Adds a text layer to a PDF based on surya-ocr results.
+    Insert an invisible text layer into *pdf_path* using Surya‑OCR results.
 
-    Args:
-        pdf_path (str): The path to the input PDF.
-        ocr_results (List[List]): The OCR results for each page.
-        output_path (str): The path to save the output PDF.
-        src_dpi (int, optional): The source DPI. Defaults to 96.
-        dst_dpi (int, optional): The destination DPI. Defaults to 72.
-
-    Returns:
-        str: The full text extracted from the PDF.
+    Returns the concatenated plaintext extracted from the OCR output.
     """
     pdf_document = fitz.open(pdf_path)
     full_text = ""
@@ -162,170 +210,98 @@ def add_text_layer_to_pdf_surya(
         page = pdf_document[page_num]
         for line in page_ocr.text_lines:
             bbox = scale_bbox(line.bbox, src_dpi, dst_dpi)
-            text = line.text
-            rect = fitz.Rect(bbox[0], bbox[1], bbox[2], bbox[3])
-            font_size = estimate_font_size(rect.width, len(text))
+            rect = fitz.Rect(*bbox)
+            font_size = estimate_font_size(rect.width, len(line.text))
             page.insert_text(
                 rect.bottom_left,
-                text,
+                line.text,
                 fontsize=font_size + 1,
                 fontname="helv",
-                render_mode=3,
+                render_mode=2,  # fill+stroke, visible in all viewers
             )
-            full_text += text + "\n"
-        full_text += "\n\n"
+            full_text += f"{line.text}\n"
+        full_text += "\n"
     pdf_document.save(output_path)
     pdf_document.close()
     return full_text
 
 
 def get_full_text_surya(ocr_results: list[Any]) -> str:
-    """
-    Generates the full text from OCR results.
-
-    Args:
-        ocr_results (List[Any]): The OCR results for each page.
-
-    Returns:
-        str: The full text extracted from the OCR results.
-    """
-    full_text = ""
+    """Flatten Surya‑OCR results into plain text (page breaks = blank line)."""
+    lines: list[str] = []
     for page_ocr in ocr_results:
         for block in page_ocr:
             if block[0] == "text_lines":
-                for line in block[1]:
-                    full_text += line.text + "\n"
-        full_text += "\n\n"  # Add a page break
-    return full_text.strip()  # Remove trailing whitespace
+                lines.extend(line.text for line in block[1])
+        lines.append("")  # page break
+    return "\n".join(lines).strip()
 
 
-def pdf_to_images(
-    filename: Path | str,
-) -> list[Image.Image]:
-    """
-    Convert a PDF file to a list of PIL Image objects.
+# ---------------------------------------------------------------------------
+# String quality / garbage detection
+# ---------------------------------------------------------------------------
 
-    Args:
-        filename: Path to the PDF file, can be a string or Path object
+def _shannon_entropy(s: str) -> float:
+    """Compute Shannon entropy of *s* using log2."""
+    if not s:
+        return 0.0
+    counts: dict[str, int] = {}
+    for ch in s:
+        counts[ch] = counts.get(ch, 0) + 1
+    length = len(s)
+    return -sum((c / length) * math.log2(c / length) for c in counts.values())
 
-    Returns:
-        A list of PIL Image objects, one for each page in the PDF
 
-    Raises:
-        FileNotFoundError: If the specified PDF file doesn't exist
-        ValueError: If the file is not a valid PDF
-    """
-    # Convert to Path object if string is provided
-    file_path = Path(filename) if isinstance(filename, str) else filename
-
-    # Check if file exists
-    if not file_path.exists():
-        raise FileNotFoundError(f"PDF file not found: {file_path}")
-
-    # Check if file is a PDF
-    if file_path.suffix.lower() != ".pdf":
-        raise ValueError(f"File must be a PDF: {file_path}")
-
-    # Open the PDF file
-    try:
-        pdf_document = fitz.open(file_path)
-    except Exception as e:
-        raise ValueError(f"Failed to open PDF file: {e}")
-
-    images = []
-
-    # Iterate through each page
-    for page_num in range(len(pdf_document)):
-        # Get the page
-        page = pdf_document.load_page(page_num)
-
-        # Convert page to a pixmap (image)
-        pix = page.get_pixmap(alpha=False)
-
-        # Convert pixmap to PIL Image
-        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-
-        # Add image to list
-        images.append(img)
-
-    # Close the PDF document
-    pdf_document.close()
-
-    return images
+_ENTROPY_THRESHOLD = 1.2  # tweak empirically
 
 
 def string_is_empty_or_garbage(s: str) -> bool:
-    """Check if a string is empty, contains only whitespace, or scanner artifacts.
-
-    This function detects various forms of "garbage" text that might be extracted
-    from scanned PDFs, including:
-      - Empty strings
-      - Whitespace-only strings (spaces, tabs, etc.)
-      - Strings with only linebreaks
-      - Strings with only control characters
-      - Common scanner artifacts like isolated dots, dashes, or repeated symbols
-      - Patterns of whitespace with random punctuation
-
-    Args:
-        s: Input string from a potentially scanned PDF document
-
-    Returns:
-        bool: True if the string is empty or contains only noise, False otherwise
     """
-    if not s:
-        return True
+    Heuristic filter for useless text extracted from PDFs (e.g. scanner artefacts).
 
-    # Check if string contains only whitespace or control characters
-    if all(c.isspace() or ord(c) < 32 for c in s):
-        return True
-
-    # Remove all whitespace and check if remaining content is meaningful
-    stripped = "".join(s.split())
-
-    # Empty after stripping
-    if not stripped:
-        return True
-
-    # Check for repetitive patterns (like '...', '---', etc.)
-    if len(set(stripped)) <= 2 and len(stripped) > 3:
-        # Allow for one or two unique characters, but requires multiple instances
-        return True
-
-    # Check for isolated punctuation and symbols commonly added by scanners
-    if all(c in ".,-_=+*/\\|:;#@!?~^()[]{}'\"`<>" for c in stripped):
-        return True
-
-    # Check for single-character noise
-    if len(stripped) <= 2:
-        return True
-
-    # Consider strings with too low text-to-whitespace ratio as noise
-    # This catches patterns like "- - - - -" or ". . . . ." that might have meaning
-    # but are more likely scanner artifacts
-    if len(stripped) < len(s) / 5 and len(s) > 10:
-        return True
-
-    return False
-
-
-def markdown_to_pdf(markdown_text, output_path: Path | str) -> Path:
+    Returns *True* when *s* looks empty or “garbage”; otherwise *False*.
     """
-    Convert markdown text to a PDF file.
+    if not s or s.isspace():
+        return True
 
-    Args:
-        markdown_text (str): The markdown text to convert
-        output_path (str): Path where the PDF file will be saved
+    compact = "".join(s.split())
+    if len(compact) < 3:
+        return True
 
-    Returns:
-        str: Path to the created PDF file
+    entropy = _shannon_entropy(compact[:1024])  # bound runtime on huge strings
+    return entropy < _ENTROPY_THRESHOLD
+
+
+# ---------------------------------------------------------------------------
+# PDF → image conversion
+# ---------------------------------------------------------------------------
+
+def pdf_to_images(filename: Union[str, Path]) -> List[Image.Image]:
     """
+    Convert every page of a PDF to a PIL Image.
 
-    if not isinstance(output_path, Path):
-        output_path = Path(output_path)
+    Raises
+    ------
+    FileNotFoundError
+        If *filename* does not exist.
+    ValueError
+        If *filename* is not a PDF or cannot be opened.
+    """
+    file_path = Path(filename)
+    if not file_path.exists():
+        raise FileNotFoundError(file_path)
+    if file_path.suffix.lower() != ".pdf":
+        raise ValueError(f"File must be a PDF: {file_path}")
 
-    converter = PdfConverter()
-    section = MarkdownSection(markdown_text)
-    converter.add_markdown(section)
-    converter.save_to_file(output_path)
+    try:
+        pdf_document = fitz.open(file_path)
+    except Exception as e:  # pragma: no cover
+        raise ValueError(f"Failed to open PDF file: {e}") from e
 
-    return output_path
+    images: list[Image.Image] = []
+    for page in pdf_document:
+        pix = page.get_pixmap(alpha=False)
+        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+        images.append(img)
+    pdf_document.close()
+    return images

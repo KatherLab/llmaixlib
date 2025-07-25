@@ -1,1 +1,1 @@
-from .engine import preprocess_file as preprocess_file
+from .engine import DocumentPreprocessor as DocumentPreprocessor
