@@ -33,6 +33,10 @@ To install all dependencies:
 pip install llmaix[all]
 ```
 
+To install paddlepaddle-gpu:
+
+uv pip install --index-url https://www.paddlepaddle.org.cn/packages/stable/cu129/ paddlepaddle-gpu==3.1.0
+
 ## Usage
 
 ### CLI

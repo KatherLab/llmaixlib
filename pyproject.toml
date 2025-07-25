@@ -1,28 +1,28 @@
 [project]
 name = "llmaix"
 version = "0.0.13"
-authers = [
-    {name = "Fabian Wolf", email = "fabian.wolf2@tu-dresden.de"}
+authors = [
+  { name = "Fabian Wolf", email = "fabian.wolf2@tu-dresden.de" }
 ]
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
 ]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 dependencies = [
-    "markitdown[docx, xlsx, xls, pdf]~=0.1.2",
-    "click~=8.2.1",
-    "pymupdf~=1.26.3",
-    "pymupdf4llm==0.0.27",
-    "ocrmypdf~=16.10.4",
-    "openai>=1.97.0",
-    "pytest>=8.4.1",
-    "hatchling~=1.27.0",
+  "markitdown[docx, xlsx, xls, pdf]~=0.1.2",
+  "click~=8.2.1",
+  "pymupdf~=1.26.3",
+  "pymupdf4llm==0.0.27",
+  "ocrmypdf~=16.10.4",
+  "openai>=1.97.1",
+  "pytest>=8.4.1",
+  "hatchling~=1.27.0"
 ]
 
 [project.urls]
@@ -45,41 +45,48 @@ packages = ["src/llmaix"]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.12.4",
-    "ty~=0.0.1a15",
-    "pytest~=8.4.1",
-    "pytest-cov~=6.2.1",
+  "ruff>=0.12.5",
+  "ty~=0.0.1a15",
+  "pytest~=8.4.1",
+  "pytest-cov~=6.2.1",
 ]
 surya = [
-    "surya-ocr~=0.14.6",
+  "surya-ocr~=0.14.6",
 ]
 docling = [
-    "docling~=2.42.0",
+  "docling~=2.42.0",
+  "rapidocr~=3.2.0",
+  "onnxruntime",
+  "rapidocr_onnxruntime"
+]
+
+paddleocr = [
+  "paddleocr>=3.1.0",
+  "paddlepaddle>=3.1.0"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest~=8.4.1",
-    "pytest-cov~=6.2.1",
-    "ruff~=0.12.4",
-    "ty~=0.0.1a15",
+  "pytest~=8.4.1",
+  "pytest-cov~=6.2.1",
+  "ruff~=0.12.4",
+  "ty~=0.0.1a15",
 ]
 surya = ["surya-ocr~=0.14.6"]
 docling = [
-    "docling~=2.42.0",
+  "docling~=2.42.0",
+  "rapidocr~=3.2.0",
+  "onnxruntime",
+  "rapidocr_onnxruntime"
+]
+paddleocr = [
+  "paddleocr>=3.1.0",
+  "paddlepaddle>=3.1.0"
 ]
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    "error",
-    "ignore::UserWarning",
-    'ignore::DeprecationWarning',
-]
-
-[tool.uv]
-environments = [
-    "sys_platform == 'darwin' and platform_machine == 'arm64'",
-    "sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "sys_platform == 'linux' and platform_machine == 'aarch64'",
-    "sys_platform == 'win32' and platform_machine == 'amd64'"
+  "error",
+  "ignore::UserWarning",
+  "ignore::DeprecationWarning"
 ]
