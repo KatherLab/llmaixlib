@@ -1207,10 +1207,11 @@ wheels = [
 
 [[package]]
 name = "llmaix"
-version = "0.0.13"
+version = "0.0.14"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
+    { name = "filetype" },
     { name = "hatchling" },
     { name = "markitdown", extra = ["docx", "pdf", "xls", "xlsx"] },
     { name = "ocrmypdf" },
@@ -1266,6 +1267,7 @@ surya = [
 requires-dist = [
     { name = "click", specifier = "~=8.2.1" },
     { name = "docling", marker = "extra == 'docling'", specifier = "~=2.42.0" },
+    { name = "filetype", specifier = ">=1.2.0" },
     { name = "hatchling", specifier = "~=1.27.0" },
     { name = "markitdown", extras = ["docx", "xlsx", "xls", "pdf"], specifier = "~=0.1.2" },
     { name = "ocrmypdf", specifier = "~=16.10.4" },
