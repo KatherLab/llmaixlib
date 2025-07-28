@@ -1,5 +1,7 @@
 import json
+
 from dotenv import load_dotenv
+
 from llmaix.extract import extract_info
 
 

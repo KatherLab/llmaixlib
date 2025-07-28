@@ -8,6 +8,7 @@ Highlights
 * Supports all modern flags: --mode, --ocr-engine, --force-ocr, --enable-picture-description, etc.
 * Optional file output via `-o/--output`.
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -17,13 +18,13 @@ import click
 from dotenv import load_dotenv
 
 from .__version__ import __version__
-from .preprocess import DocumentPreprocessor
 from .extract import extract_info
-
+from .preprocess import DocumentPreprocessor
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _get_commit_hash() -> str:
     try:
@@ -44,6 +45,7 @@ def _get_version() -> str:
 # CLI setup
 # ---------------------------------------------------------------------------
 
+
 @click.group()
 @click.version_option(_get_version(), message="%(prog)s %(version)s")
 def main() -> None:
@@ -55,9 +57,15 @@ def main() -> None:
 # Preprocess command
 # ---------------------------------------------------------------------------
 
+
 @main.command()
 @click.argument("filename", type=click.Path(exists=True, dir_okay=False, readable=True))
-@click.option("-o", "--output", type=click.Path(dir_okay=False), help="Write result to file instead of stdout")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(dir_okay=False),
+    help="Write result to file instead of stdout",
+)
 @click.option(
     "--mode",
     type=click.Choice(["fast", "advanced"]),
@@ -73,7 +81,9 @@ def main() -> None:
     help="OCR backend to use when OCR is needed / forced",
 )
 @click.option("--force-ocr", is_flag=True, help="Force OCR even if text is detected")
-@click.option("--enable-picture-description", is_flag=True, help="Generate captions for images")
+@click.option(
+    "--enable-picture-description", is_flag=True, help="Generate captions for images"
+)
 @click.option("--enable-formula", is_flag=True, help="Enrich LaTeX formulas")
 @click.option("--enable-code", is_flag=True, help="Detect code blocks")
 @click.option(
@@ -84,7 +94,11 @@ def main() -> None:
     help="Output format",
 )
 # VLM / LLM integration ----------------------------------------------------
-@click.option("--use-local-vlm", is_flag=True, help="Use a local HuggingFace VLM for picture description")
+@click.option(
+    "--use-local-vlm",
+    is_flag=True,
+    help="Use a local HuggingFace VLM for picture description",
+)
 @click.option("--local-vlm-repo-id", type=str, help="Repo ID for local VLM model")
 @click.option("--llm-model", type=str, help="Remote VLM model name / ID")
 @click.option("--base-url", type=str, help="Remote API base URL")
@@ -129,13 +143,16 @@ def preprocess(
     load_dotenv()
 
     if verbose:
-        click.echo(f"[INFO] Starting preprocessing for {filename} (mode={mode})", err=True)
+        click.echo(
+            f"[INFO] Starting preprocessing for {filename} (mode={mode})", err=True
+        )
 
     client = None
     if base_url and api_key:
         # very lightweight dummy client object
         class _Client:
             pass
+
         client = _Client()
         client.base_url = base_url
         client.api_key = api_key
@@ -167,6 +184,7 @@ def preprocess(
 # ---------------------------------------------------------------------------
 # Extract‑info command (unchanged)
 # ---------------------------------------------------------------------------
+
 
 @main.command()
 @click.option("--input", "-i", type=str, help="Input text to analyse")

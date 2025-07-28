@@ -1,30 +1,26 @@
-"""User‑facing API (`preprocess_file`) and core orchestration.
+"""User‑facing API (`preprocess_file`) and core orchestration."""
 
-* Switched to Pydantic `Document`.
-* Replaced `python‑magic` with `filetype` for MIME detection.
-* Minor cleanup and typing tweaks.
-"""
 from __future__ import annotations
 
-import os
 import atexit
+import os
 import tempfile
 from pathlib import Path
-from typing import Optional, Union, Callable, Dict
+from typing import Callable
 from urllib.parse import urljoin
 
 from pydantic import AnyUrl
 
-from .mime_detect import detect_mime
+from .backends import extract_docling, extract_pymupdf
 from .document import Document
+from .mime_detect import detect_mime
+from .ocr_engines import run_paddleocr, run_suryaocr, run_tesseract_ocr
 from .utils import string_is_empty_or_garbage
-from .ocr_engines import run_tesseract_ocr, run_paddleocr, run_suryaocr
-from .backends import extract_pymupdf, extract_docling
 
 # --------------------------------------------------------------------------------------
-# Plugin registry (lightweight – for future formats)
+# Plugin registry (lightweight –for future formats)
 # --------------------------------------------------------------------------------------
-_BACKENDS: Dict[str, Callable[[Document, "DocumentPreprocessor"], str]] = {}
+_BACKENDS: dict[str, Callable[[Document, "DocumentPreprocessor"], str]] = {}
 
 
 def register_backend(mime: str):
@@ -47,18 +43,19 @@ class DocumentPreprocessor:
         self,
         *,
         mode: str = "fast",
-        ocr_engine: Optional[str] = None,
+        ocr_engine: str | None = None,
         enable_picture_description: bool = False,
         enable_formula: bool = False,
         enable_code: bool = False,
         output_format: str = "markdown",
         llm_client=None,
-        llm_model: Optional[str] = None,
+        llm_model: str | None = None,
         use_local_vlm: bool = False,
-        local_vlm_repo_id: Optional[str] = None,
-        ocr_model_paths: Optional[dict] = None,
+        local_vlm_repo_id: str | None = None,
+        ocr_model_paths: dict | None = None,
         force_ocr: bool = False,
         vlm_prompt: str | None = None,
+        languages: list[str] | None = None,  # languages for tesseract ocr engine
     ) -> None:
         if mode not in self.VALID_MODES:
             raise ValueError(f"Invalid mode: {mode}. Valid options: {self.VALID_MODES}")
@@ -67,13 +64,17 @@ class DocumentPreprocessor:
 
         if llm_client:
             # Ensure client is a class with a `base_url` and `api_key`
-            if not hasattr(llm_client, "base_url") or not hasattr(llm_client, "api_key"):
+            if not hasattr(llm_client, "base_url") or not hasattr(
+                llm_client, "api_key"
+            ):
                 raise ValueError(
                     "llm_client must have 'base_url' and 'api_key' attributes."
                 )
             if self.mode == "fast":
-                print("Providing LLM client in fast mode is not supported. Use advanced mode.")
-            if not "chat/completions" in llm_client.base_url:
+                print(
+                    "Providing LLM client in fast mode is not supported. Use advanced mode."
+                )
+            if "chat/completions" not in llm_client.base_url:
                 llm_client.base_url = AnyUrl(
                     urljoin(llm_client.base_url, "chat/completions")
                 )
@@ -92,11 +93,12 @@ class DocumentPreprocessor:
         self.ocr_model_paths = ocr_model_paths
         self.force_ocr = force_ocr
         self.vlm_prompt = vlm_prompt
+        self.languages = languages
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
-    def process(self, source: Union[Path, str, bytes]) -> str:
+    def process(self, source: Path | str | bytes) -> str:
         """Extract Markdown/plain text from *source*.
 
         Always returns a **string**; returns "" (empty) on unrecoverable errors.
@@ -108,13 +110,15 @@ class DocumentPreprocessor:
                 return handler(doc, self)
             return self._default_process(doc)
         except Exception as exc:
-            print(f"[WARN] preprocessing failed for {source}: {exc}")  # TODO: replace with logging
+            print(
+                f"[WARN] preprocessing failed for {source}: {exc}"
+            )  # TODO: replace with logging
             return ""
 
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
-    def _prepare_document(self, source: Union[Path, bytes]) -> Document:
+    def _prepare_document(self, source: Path | bytes) -> Document:
         """Convert arbitrary *source* into a `Document` and ensure temp cleanup."""
         # ---------------- Path input ----------------
         if isinstance(source, str):
@@ -191,7 +195,7 @@ class DocumentPreprocessor:
             use_local_vlm=self.use_local_vlm,
             local_vlm_repo_id=self.local_vlm_repo_id,
             ocr_model_paths=self.ocr_model_paths,
-            vlm_prompt = self.vlm_prompt,
+            vlm_prompt=self.vlm_prompt,
         )
         if self.force_ocr or string_is_empty_or_garbage(text):
             text = self._ocr_and_extract(path)
@@ -201,7 +205,9 @@ class DocumentPreprocessor:
     # ------------------------------------------------------------------
     def _ocr_and_extract(self, path: Path) -> str:
         if self.ocr_engine == "ocrmypdf":
-            return run_tesseract_ocr(path, force_ocr=self.force_ocr)
+            return run_tesseract_ocr(
+                path, force_ocr=self.force_ocr, languages=self.languages
+            )
         if self.ocr_engine == "paddleocr":
             return run_paddleocr(path)
         if self.ocr_engine == "surya":

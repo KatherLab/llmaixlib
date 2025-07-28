@@ -1,9 +1,8 @@
 # tests/test_preprocess.py
 import os
-
-import pytest
 from pathlib import Path
 
+import pytest
 from dotenv import load_dotenv
 
 from llmaix.preprocess import DocumentPreprocessor
@@ -92,6 +91,7 @@ def test_preprocess_pdf_with_remote_vlm():
     openai_model = os.getenv("OPENAI_MODEL")
 
     if openai_api_key and openai_api_base and openai_model:
+
         class DummyClient:
             base_url = openai_api_base + "/chat/completions"
             api_key = openai_api_key
@@ -105,9 +105,11 @@ def test_preprocess_pdf_with_remote_vlm():
         )
         assert "Ashley Park" in result
     else:
+
         class DummyClient:
             base_url = "https://dummy"
             api_key = "sk‑test"
+
         with pytest.raises(Exception):
             run_preprocess(
                 PDF_NO_TEXT,

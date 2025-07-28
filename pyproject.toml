@@ -50,6 +50,7 @@ dev = [
   "ty~=0.0.1a16",
   "pytest~=8.4.1",
   "pytest-cov~=6.2.1",
+  "isort~=6.0.1",
 ]
 surya = [
   "surya-ocr~=0.14.6",
@@ -70,8 +71,9 @@ paddleocr = [
 dev = [
   "pytest~=8.4.1",
   "pytest-cov~=6.2.1",
-  "ruff~=0.12.4",
-  "ty~=0.0.1a15",
+  "ruff~=0.12.5",
+  "ty~=0.0.1a16",
+  "isort~=6.0.1",
 ]
 surya = ["surya-ocr~=0.14.6"]
 docling = [

@@ -3,19 +3,20 @@
 Switched from ``dataclasses`` to **Pydantic v2** for stronger validation,
 JSON serialisability and future extensibility (e.g. settings import/export).
 """
+
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional, Dict, Any, Union
 import hashlib
 import mimetypes
+from pathlib import Path
+from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
-
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ---------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------
+
 
 def _sha256(fp: Path, chunk: int = 8192) -> str:
     h = hashlib.sha256()
@@ -34,17 +35,18 @@ class Document(BaseModel):
     raw_path: Path = Field(..., description="Filesystem location of the source file")
     mime: str = Field(..., description="Best‑effort MIME type, e.g. application/pdf")
     text: str = Field("", description="Extracted text (Markdown or plain)")
-    ocr_pdf: Optional[Path] = Field(
+    ocr_pdf: Path | None = Field(
         None,
         description="Path to OCR‑layered PDF if such derivative is produced",
     )
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
-    # ---------------- Pydantic config ----------------
-    model_config = {
-        "arbitrary_types_allowed": True,
-        "populate_by_name": True,
-    }
+    # ---------------- Pydantic config ---------------
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True,
+    )
 
     # ---------------- Validators --------------------
 
@@ -56,10 +58,12 @@ class Document(BaseModel):
 
     # ---------------- Constructors ------------------
     @classmethod
-    def from_path(cls, path: Path, mime: Optional[str] = None) -> "Document":
+    def from_path(cls, path: Path, mime: str | None = None) -> "Document":
         if not path.exists():
             raise FileNotFoundError(path)
-        mime = mime or (mimetypes.guess_type(path.name)[0] or "application/octet-stream")
+        mime = mime or (
+            mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        )
         return cls(
             raw_path=path,
             mime=mime,

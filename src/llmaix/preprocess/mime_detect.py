@@ -10,11 +10,11 @@ Order of precedence
 This keeps the best characteristics of each approach while avoiding the
 heavy libmagic dependency when it isn’t available.
 """
+
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional, Union
 import mimetypes
+from pathlib import Path
 
 import filetype
 
@@ -23,6 +23,7 @@ import filetype
 # ---------------------------------------------------------------------------
 try:
     import magic  # type: ignore[import-untyped]
+
     _MAGIC_MIME = magic.Magic(mime=True)
 except ImportError:  # pragma: no cover – optional dependency
     _MAGIC_MIME = None  # type: ignore[assignment]
@@ -31,7 +32,7 @@ except ImportError:  # pragma: no cover – optional dependency
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
-def detect_mime(src: Union[Path, str, bytes, bytearray]) -> Optional[str]:
+def detect_mime(src: Path | str | bytes | bytearray) -> str | None:
     """Best‑effort MIME type for *src* (bytes/bytearray, ``str`` path, or ``Path``).
 
     Returns ``None`` when the type cannot be determined.

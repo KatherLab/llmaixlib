@@ -1,10 +1,10 @@
 import io
-from typing import Any
-from PIL import Image
-from markdown_it import MarkdownIt
-import fitz
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
+
+import fitz
+from markdown_it import MarkdownIt
+from PIL import Image
 
 
 class MarkdownSection:

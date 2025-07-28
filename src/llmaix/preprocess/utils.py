@@ -11,31 +11,33 @@ Sections
 
 All functions are pure and side‑effect free except where noted.
 """
+
 from __future__ import annotations
 
 import io
 import math
 from pathlib import Path
-from typing import Any, Tuple, Union, List
+from typing import Any
 
 import fitz  # PyMuPDF
-from PIL import Image
 from markdown_it import MarkdownIt
-
+from PIL import Image
 
 # ---------------------------------------------------------------------------
 # Markdown → PDF helpers
 # ---------------------------------------------------------------------------
 
+
 class MarkdownSection:
     """A logical section of Markdown to be rendered into PDF."""
+
     def __init__(
         self,
         text: str,
         toc: bool = True,
         root: str = ".",
         paper_size: str = "A4",
-        margins: Tuple[int, int, int, int] = (36, 36, -36, -36),
+        margins: tuple[int, int, int, int] = (36, 36, -36, -36),
     ) -> None:
         self.text = text
         self.toc = toc
@@ -57,6 +59,7 @@ class PdfConverter:
     optimize:
         If *True*, runs `fitz.Document.ez_save` for size optimization.
     """
+
     meta = {
         "creationDate": fitz.get_pdf_now(),
         "modDate": fitz.get_pdf_now(),
@@ -86,7 +89,9 @@ class PdfConverter:
     # -- internal ----------------------------------------------------------------
 
     @staticmethod
-    def _position_recorder(position: Any) -> None:  # callback for Story.element_positions
+    def _position_recorder(
+        position: Any,
+    ) -> None:  # callback for Story.element_positions
         position.page_num = position.pdf.page_count
         position.pdf.links.append(position)
         if not position.open_close & 1:
@@ -123,7 +128,7 @@ class PdfConverter:
             self.writer.end_page()
         return html
 
-    def save_to_file(self, file_path: Union[str, Path]) -> None:
+    def save_to_file(self, file_path: str | Path) -> None:
         """Write accumulated pages to *file_path*."""
         self.writer.close()
         self.buffer.seek(0)
@@ -138,7 +143,7 @@ class PdfConverter:
         doc.close()
 
 
-def markdown_to_pdf(markdown_text: str, output_path: Union[str, Path]) -> Path:
+def markdown_to_pdf(markdown_text: str, output_path: str | Path) -> Path:
     """
     Convenience wrapper: convert *markdown_text* straight to a PDF file.
     """
@@ -153,7 +158,8 @@ def markdown_to_pdf(markdown_text: str, output_path: Union[str, Path]) -> Path:
 # Geometry helpers
 # ---------------------------------------------------------------------------
 
-def scale_bbox(bbox: List[float], src_dpi: int = 96, dst_dpi: int = 72) -> List[float]:
+
+def scale_bbox(bbox: list[float], src_dpi: int = 96, dst_dpi: int = 72) -> list[float]:
     """
     Scale bounding‑box coordinates when DPI changes.
 
@@ -191,6 +197,7 @@ def estimate_font_size(
 # ---------------------------------------------------------------------------
 # OCR helpers – Surya‑OCR post‑processing
 # ---------------------------------------------------------------------------
+
 
 def add_text_layer_to_pdf_surya(
     pdf_path: str | Path,
@@ -241,6 +248,7 @@ def get_full_text_surya(ocr_results: list[Any]) -> str:
 # String quality / garbage detection
 # ---------------------------------------------------------------------------
 
+
 def _shannon_entropy(s: str) -> float:
     """Compute Shannon entropy of *s* using log2."""
     if not s:
@@ -276,7 +284,8 @@ def string_is_empty_or_garbage(s: str) -> bool:
 # PDF → image conversion
 # ---------------------------------------------------------------------------
 
-def pdf_to_images(filename: Union[str, Path]) -> List[Image.Image]:
+
+def pdf_to_images(filename: str | Path) -> list[Image.Image]:
     """
     Convert every page of a PDF to a PIL Image.
 

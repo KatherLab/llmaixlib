@@ -1,17 +1,17 @@
-import os
-from typing import TypeVar, Type, Any
-import json
 import inspect
-import pydantic
-from pydantic import BaseModel
+import json
+import os
+from typing import Any, Type, TypeVar
 
 import openai
+import pydantic
 from openai.types.chat import (
+    ChatCompletion,
+    ChatCompletionAssistantMessageParam,
     ChatCompletionSystemMessageParam,
     ChatCompletionUserMessageParam,
-    ChatCompletionAssistantMessageParam,
-    ChatCompletion,
 )
+from pydantic import BaseModel
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 
