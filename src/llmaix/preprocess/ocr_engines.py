@@ -28,29 +28,44 @@ def run_tesseract_ocr(
     output_path: Path | None = None,
 ) -> str:
     """
-    Accepts PDF or image. Directly supported by ocrmypdf >=13.0.0.
+    Accepts PDF or image. If image, auto-converts to 1-page PDF for OCRmyPDF.
     """
     import ocrmypdf
     import pymupdf4llm
+    from PIL import Image
+    import tempfile
+
+    # Detect if file is an image
+    if file_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif"]:
+        with Image.open(file_path) as im:
+            im = im.convert("RGB")
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                im.save(tmp, "PDF")
+                pdf_path = Path(tmp.name)
+    else:
+        pdf_path = file_path
 
     kwargs = {"force_ocr": force_ocr}
     if languages:
         kwargs["language"] = "+".join(languages)
 
-    # If output_path not specified, use a temp PDF file
     if output_path:
-        ocrmypdf.ocr(str(file_path), str(output_path), **kwargs)
+        ocrmypdf.ocr(str(pdf_path), str(output_path), **kwargs)
         return pymupdf4llm.to_markdown(output_path)
     else:
-        import tempfile
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             temp_output = Path(tmp.name)
+
         try:
-            ocrmypdf.ocr(str(file_path), str(temp_output), **kwargs)
+            ocrmypdf.ocr(str(pdf_path), str(temp_output), **kwargs)
             return pymupdf4llm.to_markdown(temp_output)
         finally:
             if temp_output.exists():
                 temp_output.unlink()
+        # If pdf_path was temporary, delete it
+        if pdf_path != file_path and pdf_path.exists():
+            pdf_path.unlink()
+
 
 
 # ---------------------------------------------------------------------------

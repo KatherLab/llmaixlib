@@ -70,6 +70,10 @@ def test_preprocess_other_formats(file_path, expected):
     result = run_preprocess(file_path, mode="advanced")
     assert expected in result
 
+def test_preprocess_image_format():
+    result = run_preprocess(IMG_FILE, mode="fast")
+    assert "Medical History" in result or "image description" in result.lower()
+
 
 def test_preprocess_pdf_with_local_vlm():
     result = run_preprocess(
