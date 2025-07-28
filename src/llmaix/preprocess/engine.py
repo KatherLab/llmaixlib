@@ -53,6 +53,7 @@ class DocumentPreprocessor:
         use_local_vlm: bool = False,
         local_vlm_repo_id: str | None = None,
         ocr_model_paths: dict | None = None,
+        docling_ocr_engine: str = "rapidocr",
         force_ocr: bool = False,
         vlm_prompt: str | None = None,
         max_image_dim: int = 800, # max image dimension for VLM processing (will be downscaled respecting aspect ratio)
@@ -92,6 +93,7 @@ class DocumentPreprocessor:
         self.use_local_vlm = use_local_vlm
         self.local_vlm_repo_id = local_vlm_repo_id
         self.ocr_model_paths = ocr_model_paths
+        self.docling_ocr_engine = docling_ocr_engine
         self.force_ocr = force_ocr
         self.vlm_prompt = vlm_prompt
         self.max_image_dim = max_image_dim
@@ -175,6 +177,7 @@ class DocumentPreprocessor:
                 use_local_vlm=self.use_local_vlm,
                 local_vlm_repo_id=self.local_vlm_repo_id,
                 ocr_model_paths=self.ocr_model_paths,
+                ocr_engine=self.docling_ocr_engine
             )
             if (self.force_ocr or string_is_empty_or_garbage(text)) and not use_vlm:
                 text = self._ocr_and_extract(path)
@@ -198,6 +201,7 @@ class DocumentPreprocessor:
             local_vlm_repo_id=self.local_vlm_repo_id,
             ocr_model_paths=self.ocr_model_paths,
             vlm_prompt=self.vlm_prompt,
+            ocr_engine=self.docling_ocr_engine
         )
         if self.force_ocr or string_is_empty_or_garbage(text):
             text = self._ocr_and_extract(path)
