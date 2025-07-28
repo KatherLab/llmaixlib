@@ -148,18 +148,24 @@ class DocumentPreprocessor:
         return Document.from_path(tmp_path, mime)
 
     # ------------------------------------------------------------------
+
     def _default_process(self, doc: Document) -> str:
+        """
+        Core file routing: extracts plain text, PDF, or image input,
+        and processes with selected OCR engine as appropriate.
+        """
         path = doc.raw_path
+        mime = doc.mime  # Detected via detect_mime
         suffix = path.suffix.lower()
         use_vlm = bool(self.client and self.llm_model) or self.use_local_vlm
 
         # ---------------- Plain text ----------------
-        if doc.mime.startswith("text/") or suffix == ".txt":
+        if mime and mime.startswith("text/") or suffix == ".txt":
             doc.text = path.read_text(errors="ignore")
             return doc.text
 
         # ---------------- PDF -----------------------
-        if suffix == ".pdf" or doc.mime == "application/pdf":
+        if mime == "application/pdf" or suffix == ".pdf":
             if self.mode == "fast":
                 text = "" if self.force_ocr else extract_pymupdf(path)
                 if self.force_ocr or string_is_empty_or_garbage(text):
@@ -177,20 +183,27 @@ class DocumentPreprocessor:
                 use_local_vlm=self.use_local_vlm,
                 local_vlm_repo_id=self.local_vlm_repo_id,
                 ocr_model_paths=self.ocr_model_paths,
-                ocr_engine=self.docling_ocr_engine
+                ocr_engine=self.docling_ocr_engine,
             )
             if (self.force_ocr or string_is_empty_or_garbage(text)) and not use_vlm:
                 text = self._ocr_and_extract(path)
             doc.text = text
             return text
 
+        # ---------------- Images (PNG, JPEG, TIFF, BMP, GIF, etc.) ----------------
+        if mime and mime.startswith("image/"):
+            # Pass image file directly to OCR engine (all runners now support this)
+            text = self._ocr_and_extract(path)
+            doc.text = text
+            return text
+
         # ---------------- Unsupported / others ------
         if self.mode == "fast":
             raise ValueError(
-                f"Unsupported MIME {doc.mime} in fast mode. Use advanced mode or add a plugin."
+                f"Unsupported MIME {mime} in fast mode. Use advanced mode or add a plugin."
             )
 
-        # advanced fallback via Docling
+        # advanced fallback via Docling for unknown formats
         text = extract_docling(
             path,
             self.enrich,
@@ -201,7 +214,7 @@ class DocumentPreprocessor:
             local_vlm_repo_id=self.local_vlm_repo_id,
             ocr_model_paths=self.ocr_model_paths,
             vlm_prompt=self.vlm_prompt,
-            ocr_engine=self.docling_ocr_engine
+            ocr_engine=self.docling_ocr_engine,
         )
         if self.force_ocr or string_is_empty_or_garbage(text):
             text = self._ocr_and_extract(path)

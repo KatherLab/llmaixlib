@@ -1,6 +1,6 @@
 [project]
 name = "llmaix"
-version = "0.0.16"
+version = "0.0.17"
 authors = [
   { name = "Fabian Wolf", email = "fabian.wolf2@tu-dresden.de" }
 ]
@@ -86,6 +86,7 @@ paddleocr = [
   "paddleocr>=3.1.0",
   "paddlepaddle>=3.1.0"
 ]
+all = ["llmaix[dev,surya,docling,paddleocr]"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
