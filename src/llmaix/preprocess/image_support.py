@@ -14,10 +14,10 @@ def test_remote_image_support(api_url: str, model: str, api_key: str) -> bool:
     payload = {
         "model": model,
         "messages": [
-            {"role": "user", "content": "Describe this image."},
+            {"role": "user", "content": "Describe this image in one word."},
             {"role": "user", "name": "image", "image": b64},
         ],
-        "max_tokens": 1,
+        "max_tokens": 3,
     }
     response = requests.post(api_url, json=payload, headers=headers, timeout=10)
     try:

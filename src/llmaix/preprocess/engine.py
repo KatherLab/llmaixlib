@@ -55,6 +55,7 @@ class DocumentPreprocessor:
         ocr_model_paths: dict | None = None,
         force_ocr: bool = False,
         vlm_prompt: str | None = None,
+        max_image_dim: int = 800, # max image dimension for VLM processing (will be downscaled respecting aspect ratio)
         languages: list[str] | None = None,  # languages for tesseract ocr engine
     ) -> None:
         if mode not in self.VALID_MODES:
@@ -93,6 +94,7 @@ class DocumentPreprocessor:
         self.ocr_model_paths = ocr_model_paths
         self.force_ocr = force_ocr
         self.vlm_prompt = vlm_prompt
+        self.max_image_dim = max_image_dim
         self.languages = languages
 
     # ------------------------------------------------------------------
@@ -209,7 +211,7 @@ class DocumentPreprocessor:
                 path, force_ocr=self.force_ocr, languages=self.languages
             )
         if self.ocr_engine == "paddleocr":
-            return run_paddleocr(path)
+            return run_paddleocr(path, max_image_dim=self.max_image_dim)
         if self.ocr_engine == "surya":
-            return run_suryaocr(path)
+            return run_suryaocr(path, max_image_dim=self.max_image_dim)
         raise ValueError(f"Unknown OCR engine: {self.ocr_engine}")
