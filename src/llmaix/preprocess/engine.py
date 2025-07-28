@@ -56,7 +56,7 @@ class DocumentPreprocessor:
         docling_ocr_engine: str = "rapidocr",
         force_ocr: bool = False,
         vlm_prompt: str | None = None,
-        max_image_dim: int = 800, # max image dimension for VLM processing (will be downscaled respecting aspect ratio)
+        max_image_dim: int = 800,  # max image dimension for VLM processing (will be downscaled respecting aspect ratio)
         languages: list[str] | None = None,  # languages for tesseract ocr engine
     ) -> None:
         if mode not in self.VALID_MODES:
@@ -76,9 +76,11 @@ class DocumentPreprocessor:
                 print(
                     "Providing LLM client in fast mode is not supported. Use advanced mode."
                 )
-            if "chat/completions" not in llm_client.base_url:
+            base_url_str = str(llm_client.base_url)
+
+            if "chat/completions" not in base_url_str:
                 llm_client.base_url = AnyUrl(
-                    urljoin(llm_client.base_url, "chat/completions")
+                    url=urljoin(base_url_str, "chat/completions")
                 )
 
         self.ocr_engine = ocr_engine or ("ocrmypdf" if mode == "fast" else "paddleocr")
@@ -102,7 +104,9 @@ class DocumentPreprocessor:
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
-    def process(self, source: Path | str | bytes, catch_exceptions: bool = False) -> str:
+    def process(
+        self, source: Path | str | bytes, catch_exceptions: bool = False
+    ) -> str:
         """Extract Markdown/plain text from *source*.
 
         Always returns a **string**; returns "" (empty) on unrecoverable errors.
@@ -126,7 +130,6 @@ class DocumentPreprocessor:
             if handler:
                 return handler(doc, self)
             return self._default_process(doc)
-
 
     # ------------------------------------------------------------------
     # Private helpers

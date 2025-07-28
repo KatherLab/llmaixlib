@@ -33,7 +33,6 @@ def run_tesseract_ocr(
     import ocrmypdf
     import pymupdf4llm
     from PIL import Image
-    import tempfile
 
     # Detect if file is an image
     if file_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif"]:
@@ -67,7 +66,6 @@ def run_tesseract_ocr(
             pdf_path.unlink()
 
 
-
 # ---------------------------------------------------------------------------
 # PaddleOCR PP‑Structure
 # ---------------------------------------------------------------------------
@@ -80,8 +78,10 @@ def run_paddleocr(
 ) -> str:
     import warnings
     from pathlib import Path as _P
-    from PIL import Image
+
     import numpy as np
+    from PIL import Image
+
     from .mime_detect import detect_mime
 
     mime = detect_mime(file_path)
@@ -94,8 +94,8 @@ def run_paddleocr(
                 category=SyntaxWarning,
                 module="paddlex",
             )
-            from paddleocr import PPStructureV3
             import fitz
+            from paddleocr import PPStructureV3
 
             pipeline = PPStructureV3(
                 use_doc_orientation_classify=False,
@@ -107,29 +107,43 @@ def run_paddleocr(
                 with fitz.open(_P(file_path)) as doc:
                     for page in doc:
                         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
-                        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+                        img = Image.frombytes(
+                            "RGB", (pix.width, pix.height), pix.samples
+                        )
                         if max(img.size) > max_image_dim:
-                            img.thumbnail((max_image_dim, max_image_dim), Image.Resampling.LANCZOS)
+                            img.thumbnail(
+                                (max_image_dim, max_image_dim), Image.Resampling.LANCZOS
+                            )
                         output = pipeline.predict(np.array(img))
                         for res in output:
                             md = (
-                                res.get("markdown_texts")
-                                or res.get("markdown")
-                                or str(res)
-                            ) if isinstance(res, dict) else str(res)
+                                (
+                                    res.get("markdown_texts")
+                                    or res.get("markdown")
+                                    or str(res)
+                                )
+                                if isinstance(res, dict)
+                                else str(res)
+                            )
                             results.append(md)
             elif mime and mime.startswith("image/"):
                 with Image.open(file_path) as img:
                     img = img.convert("RGB")
                     if max(img.size) > max_image_dim:
-                        img.thumbnail((max_image_dim, max_image_dim), Image.Resampling.LANCZOS)
+                        img.thumbnail(
+                            (max_image_dim, max_image_dim), Image.Resampling.LANCZOS
+                        )
                     output = pipeline.predict(np.array(img))
                     for res in output:
                         md = (
-                            res.get("markdown_texts")
-                            or res.get("markdown")
-                            or str(res)
-                        ) if isinstance(res, dict) else str(res)
+                            (
+                                res.get("markdown_texts")
+                                or res.get("markdown")
+                                or str(res)
+                            )
+                            if isinstance(res, dict)
+                            else str(res)
+                        )
                         results.append(md)
             else:
                 raise ValueError(f"Unsupported file type: {file_path} ({mime})")
@@ -155,10 +169,10 @@ def run_suryaocr(
     """
     Accepts PDF or image. Processes accordingly.
     """
+    import fitz
     from PIL import Image
     from surya.detection import DetectionPredictor
     from surya.recognition import RecognitionPredictor
-    import fitz
 
     # cache models
     if not hasattr(run_suryaocr, "_recog"):
@@ -176,7 +190,9 @@ def run_suryaocr(
                 pix = page.get_pixmap()
                 img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
                 if max(img.size) > max_image_dim:
-                    img.thumbnail((max_image_dim, max_image_dim), Image.Resampling.LANCZOS)
+                    img.thumbnail(
+                        (max_image_dim, max_image_dim), Image.Resampling.LANCZOS
+                    )
                 images.append(img)
     # Image branch
     elif file_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif"]:
@@ -196,4 +212,3 @@ def run_suryaocr(
         lines.append("")  # page break
 
     return "\n".join(lines).strip()
-
