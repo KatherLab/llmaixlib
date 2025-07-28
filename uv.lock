@@ -1216,7 +1216,7 @@ wheels = [
 
 [[package]]
 name = "llmaix"
-version = "0.0.16"
+version = "0.0.17"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -1231,6 +1231,20 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+all = [
+    { name = "docling" },
+    { name = "isort" },
+    { name = "onnxruntime" },
+    { name = "paddleocr" },
+    { name = "paddlepaddle" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "rapidocr" },
+    { name = "rapidocr-onnxruntime" },
+    { name = "ruff" },
+    { name = "surya-ocr" },
+    { name = "ty" },
+]
 dev = [
     { name = "isort" },
     { name = "pytest" },
@@ -1281,6 +1295,7 @@ requires-dist = [
     { name = "filetype", specifier = ">=1.2.0" },
     { name = "hatchling", specifier = "~=1.27.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = "~=6.0.1" },
+    { name = "llmaix", extras = ["dev", "surya", "docling", "paddleocr"], marker = "extra == 'all'" },
     { name = "markitdown", extras = ["docx", "xlsx", "xls", "pdf"], specifier = "~=0.1.2" },
     { name = "ocrmypdf", specifier = "~=16.10.4" },
     { name = "onnxruntime", marker = "extra == 'docling'" },
@@ -1298,7 +1313,7 @@ requires-dist = [
     { name = "surya-ocr", marker = "extra == 'surya'", specifier = "~=0.14.6" },
     { name = "ty", marker = "extra == 'dev'", specifier = "~=0.0.1a16" },
 ]
-provides-extras = ["dev", "surya", "docling", "paddleocr"]
+provides-extras = ["dev", "surya", "docling", "paddleocr", "all"]
 
 [package.metadata.requires-dev]
 dev = [
