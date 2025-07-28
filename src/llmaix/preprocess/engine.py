@@ -102,22 +102,31 @@ class DocumentPreprocessor:
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
-    def process(self, source: Path | str | bytes) -> str:
+    def process(self, source: Path | str | bytes, catch_exceptions: bool = False) -> str:
         """Extract Markdown/plain text from *source*.
 
         Always returns a **string**; returns "" (empty) on unrecoverable errors.
         """
-        try:
+
+        if catch_exceptions:
+            try:
+                doc = self._prepare_document(source)
+                handler = _BACKENDS.get(doc.mime)
+                if handler:
+                    return handler(doc, self)
+                return self._default_process(doc)
+            except Exception as exc:
+                print(
+                    f"[WARN] preprocessing failed for {source}: {exc}"
+                )  # TODO: replace with logging
+                return ""
+        else:
             doc = self._prepare_document(source)
             handler = _BACKENDS.get(doc.mime)
             if handler:
                 return handler(doc, self)
             return self._default_process(doc)
-        except Exception as exc:
-            print(
-                f"[WARN] preprocessing failed for {source}: {exc}"
-            )  # TODO: replace with logging
-            return ""
+
 
     # ------------------------------------------------------------------
     # Private helpers
