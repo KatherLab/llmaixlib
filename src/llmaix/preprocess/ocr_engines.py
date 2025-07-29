@@ -117,11 +117,7 @@ def run_paddleocr(
                         output = pipeline.predict(np.array(img))
                         for res in output:
                             md = (
-                                (
-                                    res.get("markdown_texts")
-                                    or res.get("markdown")
-                                    or str(res)
-                                )
+                                (res.markdown["markdown_texts"] or str(res))  # noqa
                                 if isinstance(res, dict)
                                 else str(res)
                             )
@@ -136,11 +132,7 @@ def run_paddleocr(
                     output = pipeline.predict(np.array(img))
                     for res in output:
                         md = (
-                            (
-                                res.get("markdown_texts")
-                                or res.get("markdown")
-                                or str(res)
-                            )
+                            (res.markdown["markdown_texts"] or str(res))  # noqa
                             if isinstance(res, dict)
                             else str(res)
                         )
