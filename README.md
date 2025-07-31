@@ -1,10 +1,12 @@
----
+![Tests](https://github.com/KatherLab/llmaixlib/actions/workflows/tests.yml/badge.svg?branch=main)
 
 # LLMAIxLib
 
 **LLMAIxLib** is a Python toolkit for automated document preprocessing (including OCR) and information extraction using large language models. It is designed for users who need to extract structured facts from arbitrary documents (PDF, DOCX, images, etc.) and output them as Markdown, plain text, or validated JSON.
 
-> ⚠️ Under active development. Best suited for research or prototyping. Always validate results.
+>[!CAUTION]
+> 
+> Under active development. Best suited for research or prototyping. Always validate results.
 
 ---
 
