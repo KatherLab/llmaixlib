@@ -1,121 +1,183 @@
-![Tests](https://github.com/KatherLab/llmaixlib/actions/workflows/tests.yml/badge.svg?branch=main)
+---
 
-# LLMAIxv2 Library
+# LLMAIxLib
 
-**LLMAIx** is an end‑to‑end toolkit for turning raw documents into structured knowledge with large‑language models. It now features a modular, Pydantic‑validated preprocessing core, richer OCR choices, and a revamped CLI.
+**LLMAIxLib** is a Python toolkit for automated document preprocessing (including OCR) and information extraction using large language models. It is designed for users who need to extract structured facts from arbitrary documents (PDF, DOCX, images, etc.) and output them as Markdown, plain text, or validated JSON.
 
-> **Status:** the public API is still stabilising; expect small breaking changes before a 2.0 stable release.
+> ⚠️ Under active development. Best suited for research or prototyping. Always validate results.
 
-## ✨ Key capabilities
+---
 
-* **Robust preprocessing** –extract Markdown or plain text from PDFs, DOCX, TXT and images. The pipeline tries cheap text extraction first (PyMuPDF) and falls back to OCR (OCR‑my‑PDF/PaddleOCR/Surya) only when needed).
-* **Layout‑aware enrichment** – advanced mode plugs into the Docling pipeline for tables, formulas and picture descriptions, optionally powered by a local or remote vision‑language model.
-* **MIME‑aware loading** – files (or byte buffers) are classified with **python‑magic** so even extension‑less uploads are handled correctly.
-* **Information extraction** – send arbitrary prompts + a Pydantic schema and get back valid JSON, using any OpenAI‑compatible LLM endpoint.
-* **CLI utilities** – one‑command document conversion (`llmaix preprocess`) and structured‑info extraction (`llmaix extract`).
-* **Extensible** – register new back‑ends (e.g. EPUB) with a single decorator; models and OCR engines can be swapped freely.
+## 🚀 What LLMAIxLib Does
+
+* **Preprocessing:** Extracts human-readable Markdown or plain text from a wide range of document types, automatically falling back to OCR for scanned or image-based files.
+* **Information Extraction:** Uses a large language model (LLM) to transform unstructured or semi-structured text into structured data—validated by Pydantic models or JSON Schema—via an OpenAI-compatible API.
+
+---
+
+## ❗ What You Need
+
+* **Python ≥3.12**
+* **OCR tools:** Tesseract (for OCRmyPDF), a GPU for faster OCR (Surya-OCR and PaddleOCR)
+* **OpenAI-compatible API endpoint:**
+  Required for information extraction! This can be:
+
+  * The official OpenAI API (or Azure OpenAI or ...)
+  * A self-hosted API that matches the OpenAI chat/completions format, e.g. `vllm`, `llama.cpp` server, or other compatible backends
+  * Your endpoint **must support structured output** (based on JSON schema).
+
+---
 
 ## 🛠 Installation
 
-```bash
-pip install llmaix          # base
-pip install llmaix[docling] # + Docling/VLM extras
-pip install llmaix[surya]   # + Surya‑OCR
-pip install llmaix[all]     # everything
-```
-
-If you need GPU PaddleOCR:
+Install base:
 
 ```bash
-uv pip install \
-  --index-url https://www.paddlepaddle.org.cn/packages/stable/cu129/ \
-  paddlepaddle-gpu==3.1.0
+pip install llmaix
 ```
 
-PaddleOCR supports 80+ languages out‑of‑the‑box).
-For MIME detection install **libmagic** (Linux/macOS) or `python-magic-win64` on Windows).
-
-## 🚀 Quick start
-
-### CLI
+Add extras for advanced features:
 
 ```bash
-llmaix preprocess myscan.pdf                 # fast mode, auto‑OCR
-llmaix preprocess doc.pdf --mode advanced \
-    --enable-picture-description             # Docling + VLM captions
-llmaix preprocess scan.pdf --force-ocr \
-    --ocr-engine paddleocr -o out.md
-llmaix extract -i "Acme Inc. raised $10 M..." # JSON extraction
+pip install llmaix[docling]      # advanced layout + VLM support
+pip install llmaix[surya]        # Surya OCR
+pip install llmaix[paddleocr]    # PaddleOCR
+pip install llmaix[docling,surya,paddleocr] # all extras
 ```
 
-### Python API
+---
+
+## 📚 Usage
+
+### CLI Examples
+
+Environment variables are the recommended way to provide your API settings (see below).
+
+```bash
+llmaix preprocess file.pdf                # extract as Markdown, fast mode
+llmaix preprocess scan.pdf --force-ocr --ocr-engine paddleocr -o out.md
+llmaix preprocess paper.pdf --mode advanced --enable-picture-description
+llmaix extract --input "Patient was a 73-year-old male..." --json-schema patient_schema.json
+```
+
+### Python API Example
 
 ```python
 from llmaix.preprocess import DocumentPreprocessor
-
-# 1) simple PDF (born digital)
-text = DocumentPreprocessor(mode="fast").process("report.pdf")
-
-# 2) scanned PDF with multilingual OCR
-proc = DocumentPreprocessor(
-    mode="advanced",
-    ocr_engine="surya",
-    force_ocr=True,
-    enable_picture_description=True,
-    use_local_vlm=True,
-    local_vlm_repo_id="HuggingFaceTB/SmolVLM-256M-Instruct",
-    vlm_prompt="Please describe this document in detail.",
-)
-markdown = proc.process("scan_no_text.pdf")
-```
-
-**Information extraction**
-
-```python
 from llmaix import extract_info
 from pydantic import BaseModel
 
-class LabInfo(BaseModel):
+# Preprocessing: get Markdown or text
+proc = DocumentPreprocessor(mode="advanced", ocr_engine="surya")
+markdown = proc.process("scan.pdf")
+
+# Information extraction: structured JSON from text via LLM
+class PersonInfo(BaseModel):
     name: str
-    location: str
-    lead: str
+    affiliation: str
+    position: str
 
-sentence = (
-    "The KatherLab is a research group at TU Dresden led by Prof. Jakob N. Kather."
+result = extract_info(
+    prompt="Alice Smith is a Professor of AI at TU Dresden.",
+    pydantic_model=PersonInfo,
+    llm_model="o4-mini"
 )
-json_out = extract_info(
-    prompt=f"Extract lab facts: {sentence}",
-    pydantic_model=LabInfo,
-    llm_model="gpt-4o-mini"
-)
-print(json_out.json(indent=2))
+print(result.json(indent=2))
 ```
 
-## ⚙️ Back‑end matrix
+---
 
-| Task                | Engine                 | Notes                                                          |
-| ------------------- | ---------------------- |----------------------------------------------------------------|
-| **Text extraction** | PyMuPDF‑for‑LLM        | Fast Markdown conversion from PDFs |
-|                     | Docling                | Layout‑aware; optional VLM captions       |
-| **OCR**             | OCR‑my‑PDF (Tesseract) | Strong PDF/A support            |
-|                     | Surya‑OCR              | Local transformer OCR, 90 + langs                |
-|                     | PaddleOCR PP‑Structure | Table & formula detection                        |
-| **MIME sniffing**   | python‑magic           | libmagic signatures                                |
-| (optional)          | filetype               | pure‑Python fallback                             |
+## 🔑 API Configuration
 
-## 🧪 Tests
-
-Clone and run:
+You must provide your LLM API settings by **environment variable** (recommended) or CLI flag:
 
 ```bash
-git clone https://github.com/KatherLab/LLMAIx-v2.git
-cd LLMAIx-v2
-uv sync
-uv run pytest          # full suite
+export OPENAI_API_KEY=sk-xxx
+export OPENAI_API_BASE=https://api.example.com/v1  # optional, default: OpenAI endpoint
+export OPENAI_MODEL=gpt-4                         # optional, default: set in CLI or code
 ```
 
-You can focus on a backend:
+Or pass directly:
 
 ```bash
+llmaix extract --input "..." --llm-model llama-3-8b-instruct --base-url http://localhost:8000/v1 --api-key sk-xxx --json-schema schema.json
+```
+
+---
+
+## 🗂 Architecture Overview
+
+### **Preprocessing**
+
+* **DocumentPreprocessor**:
+
+  * Detects MIME type and routes to the appropriate handler.
+  * For PDFs: tries fast text extraction first, falls back to OCR (OCRmyPDF, PaddleOCR, Surya-OCR) if needed.
+  * DOCX, TXT, and image formats supported.
+  * Advanced mode: integrates Docling for tables, formulas, and (optionally) vision-language model for image captioning.
+* **OCR Engines**: Pluggable; use Tesseract, Surya, PaddleOCR as needed.
+
+### **Information Extraction**
+
+* **extract\_info**:
+
+  * Sends text and a schema (Pydantic or JSON Schema) to an OpenAI-compatible API endpoint.
+  * Validates output as structured JSON.
+  * CLI can load schema from file or as literal string.
+  * *Your API endpoint must support structured outputs!*
+  * Can be used with hosted (OpenAI, Azure) or self-hosted (e.g. llama.cpp, vllm) models that follow the OpenAI API.
+
+---
+
+## 🧩 JSON Schema Example
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "experiment_id": { "type": "string" },
+    "date": { "type": "string", "format": "date" },
+    "findings": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["experiment_id", "findings"]
+}
+```
+
+---
+
+## ✅ Quick Checklist
+
+1. **Set up API credentials** (see above).
+2. **Install OCR backends** as required for your documents.
+3. **Use `llmaix preprocess`** for robust text/Markdown extraction from documents.
+4. **Use `llmaix extract`** (with prompt + schema or model) for LLM-powered structured extraction.
+
+---
+
+## 🧪 Testing
+
+```bash
+uv run pytest
 uv run pytest tests/test_preprocess.py -k paddleocr
 ```
+
+---
+
+## ⚠️ Caveats & Notes
+
+* Preprocessing only: No LLM API needed if you just want Markdown/text from documents.
+* Information extraction: Requires an OpenAI-compatible API endpoint that supports structured outputs.
+* If your LLM or endpoint does **not** support structured output via `reponse_format`, information extraction will not work as expected.
+  * You can still use the `extract_info` function and provide a `prompt` or `system_prompt` argument which teaches the model to respond with valid JSON only in the desired format!
+
+---
+
+## 📄 License
+
+MIT.
+
+Contributions welcome.
+
+Repo: [github.com/KatherLab/llmaixlib](https://github.com/KatherLab/llmaixlib)
+
+---

@@ -1,6 +1,6 @@
 [project]
 name = "llmaix"
-version = "0.0.21"
+version = "0.0.22"
 authors = [
   { name = "Fabian Wolf", email = "fabian.wolf2@tu-dresden.de" }
 ]
@@ -20,7 +20,7 @@ dependencies = [
   "pymupdf~=1.26.3",
   "pymupdf4llm==0.0.27",
   "ocrmypdf~=16.10.4",
-  "openai>=1.97.1",
+  "openai>=1.98.0",
   "pytest>=8.4.1",
   "hatchling~=1.27.0",
   "filetype>=1.2.0"
@@ -46,18 +46,18 @@ packages = ["src/llmaix"]
 
 [dependency-groups]
 dev = [
-  "ruff>=0.12.5",
+  "ruff>=0.12.7",
   "ty~=0.0.1a16",
   "pytest~=8.4.1",
   "pytest-cov~=6.2.1",
   "isort~=6.0.1",
 ]
 surya = [
-  "surya-ocr~=0.14.6",
+  "surya-ocr~=0.14.7",
 ]
 docling = [
-  "docling~=2.42.0",
-  "rapidocr~=3.2.0",
+  "docling~=2.43.0",
+  "rapidocr~=3.3.0",
   "onnxruntime",
   "rapidocr_onnxruntime"
 ]
@@ -71,14 +71,14 @@ paddleocr = [
 dev = [
   "pytest~=8.4.1",
   "pytest-cov~=6.2.1",
-  "ruff~=0.12.5",
+  "ruff~=0.12.7",
   "ty~=0.0.1a16",
   "isort~=6.0.1",
 ]
-surya = ["surya-ocr~=0.14.6"]
+surya = ["surya-ocr~=0.14.7"]
 docling = [
-  "docling~=2.42.0",
-  "rapidocr~=3.2.0",
+  "docling~=2.43.0",
+  "rapidocr~=3.3.0",
   "onnxruntime",
   "rapidocr_onnxruntime"
 ]
