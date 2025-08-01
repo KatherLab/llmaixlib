@@ -16,6 +16,8 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
+from llmaix.preprocess.mime_detect import detect_mime
+
 # ---------------------------------------------------------------------------
 # Tesseract via ocrmypdf
 # ---------------------------------------------------------------------------
@@ -29,20 +31,32 @@ def run_tesseract_ocr(
 ) -> str:
     """
     Accepts PDF or image. If image, auto-converts to 1-page PDF for OCRmyPDF.
+    Now detects file type using MIME detection, not file extension.
     """
     import ocrmypdf
     import pymupdf4llm
     from PIL import Image
 
-    # Detect if file is an image
-    if file_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif"]:
+    # --- Use MIME detection to determine file type ---
+    mime = detect_mime(file_path)
+    if mime is None:
+        raise ValueError(f"Could not determine MIME type for file: {file_path}")
+
+    # Common image MIME types
+    IMAGE_MIME_PREFIXES = ("image/",)
+    PDF_MIME = "application/pdf"
+
+    # Convert image to PDF if needed
+    if mime.startswith(IMAGE_MIME_PREFIXES):
         with Image.open(file_path) as im:
             im = im.convert("RGB")
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
                 im.save(tmp, "PDF")
                 pdf_path = Path(tmp.name)
-    else:
+    elif mime == PDF_MIME:
         pdf_path = file_path
+    else:
+        raise ValueError(f"Unsupported file type: {mime}")
 
     kwargs = {"force_ocr": force_ocr}
     if languages:
@@ -50,20 +64,24 @@ def run_tesseract_ocr(
 
     if output_path:
         ocrmypdf.ocr(str(pdf_path), str(output_path), **kwargs)
-        return pymupdf4llm.to_markdown(output_path)
+        result_path = output_path
     else:
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             temp_output = Path(tmp.name)
-
         try:
             ocrmypdf.ocr(str(pdf_path), str(temp_output), **kwargs)
-            return pymupdf4llm.to_markdown(temp_output)
+            result_path = temp_output
         finally:
-            if temp_output.exists():
-                temp_output.unlink()
-        # If pdf_path was temporary, delete it
-        if pdf_path != file_path and pdf_path.exists():
-            pdf_path.unlink()
+            # If pdf_path was temporary, delete it
+            if pdf_path != file_path and pdf_path.exists():
+                pdf_path.unlink()
+
+    # Use pymupdf4llm to extract markdown text
+    try:
+        return pymupdf4llm.to_markdown(result_path)
+    finally:
+        if not output_path and result_path.exists():
+            result_path.unlink()
 
 
 # ---------------------------------------------------------------------------
