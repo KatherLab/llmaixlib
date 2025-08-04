@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'darwin'",
@@ -1334,7 +1334,7 @@ paddleocr = [
     { name = "paddleocr", specifier = ">=3.1.0" },
     { name = "paddlepaddle", specifier = ">=3.1.0" },
 ]
-surya = [{ name = "surya-ocr", specifier = "~=0.14.7" }]
+surya = [{ name = "surya-ocr", specifier = ">=0.14.7,<0.16.0" }]
 
 [[package]]
 name = "lxml"
