@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'darwin'",
@@ -2832,7 +2832,7 @@ wheels = [
 
 [[package]]
 name = "rapidocr"
-version = "3.3.0"
+version = "3.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorlog" },
@@ -2848,7 +2848,7 @@ dependencies = [
     { name = "tqdm" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/4b/f6dcf8ce4c69d652a5c728b1433c26de3c80f9127ef8fb4c0171799d4a4b/rapidocr-3.3.0-py3-none-any.whl", hash = "sha256:c8f9298fe8365187b608d79d9db81d3c32fd9c91e673d159e3807cdaf30d16da", size = 15055253, upload-time = "2025-07-27T10:27:46.059Z" },
+    { url = "https://files.pythonhosted.org/packages/73/36/6bc4c1be6134a49ea598ff8ea60e17b1bf5b9b917a8affc0ca3720bcdf83/rapidocr-3.3.1-py3-none-any.whl", hash = "sha256:ec7da65eeea68943ca934c598e0703cdf549810209a2f22b45212c66eb5b6d0b", size = 15055288, upload-time = "2025-08-01T02:05:02.06Z" },
 ]
 
 [[package]]
