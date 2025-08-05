@@ -2,3 +2,7 @@
 .env
 .idea
 dist
+ __pycache__/
+ *.pyc
+ .DS_Store
+ tests/.DS_Store
