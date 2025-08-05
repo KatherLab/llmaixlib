@@ -181,12 +181,15 @@ def run_suryaocr(
     """
     import fitz
     from PIL import Image
+
+    from surya.foundation import FoundationPredictor
     from surya.detection import DetectionPredictor
     from surya.recognition import RecognitionPredictor
 
     # cache models
     if not hasattr(run_suryaocr, "_recog"):
-        run_suryaocr._recog = RecognitionPredictor()  # type: ignore[attr-defined]
+        foundation_predictor = FoundationPredictor()
+        run_suryaocr._recog = RecognitionPredictor(foundation_predictor)  # type: ignore[attr-defined]
         run_suryaocr._detect = DetectionPredictor()  # type: ignore[attr-defined]
 
     recog = run_suryaocr._recog  # type: ignore[attr-defined]

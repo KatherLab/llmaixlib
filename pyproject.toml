@@ -1,6 +1,6 @@
 [project]
 name = "llmaix"
-version = "0.0.23"
+version = "0.0.24"
 authors = [
   { name = "Fabian Wolf", email = "fabian.wolf2@tu-dresden.de" }
 ]
@@ -53,11 +53,11 @@ dev = [
   "isort~=6.0.1",
 ]
 surya = [
-  "surya-ocr~=0.14.7",
+  "surya-ocr~=0.15.2",
 ]
 docling = [
   "docling~=2.43.0",
-  "rapidocr~=3.3.0",
+  "rapidocr~=3.3.1",
   "onnxruntime",
   "rapidocr_onnxruntime"
 ]
@@ -75,10 +75,10 @@ dev = [
   "ty~=0.0.1a16",
   "isort~=6.0.1",
 ]
-surya = ["surya-ocr~=0.14.7"]
+surya = ["surya-ocr~=0.15.2"]
 docling = [
   "docling~=2.43.0",
-  "rapidocr~=3.3.0",
+  "rapidocr~=3.3.1",
   "onnxruntime",
   "rapidocr_onnxruntime"
 ]

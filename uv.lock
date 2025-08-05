@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'darwin'",
@@ -1217,7 +1217,7 @@ wheels = [
 
 [[package]]
 name = "llmaix"
-version = "0.0.23"
+version = "0.0.24"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -1308,10 +1308,10 @@ requires-dist = [
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "~=8.4.1" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "~=6.2.1" },
-    { name = "rapidocr", marker = "extra == 'docling'", specifier = "~=3.3.0" },
+    { name = "rapidocr", marker = "extra == 'docling'", specifier = "~=3.3.1" },
     { name = "rapidocr-onnxruntime", marker = "extra == 'docling'" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "~=0.12.7" },
-    { name = "surya-ocr", marker = "extra == 'surya'", specifier = "~=0.14.7" },
+    { name = "surya-ocr", marker = "extra == 'surya'", specifier = "~=0.15.2" },
     { name = "ty", marker = "extra == 'dev'", specifier = "~=0.0.1a16" },
 ]
 provides-extras = ["dev", "surya", "docling", "paddleocr", "all"]
@@ -1327,14 +1327,14 @@ dev = [
 docling = [
     { name = "docling", specifier = "~=2.43.0" },
     { name = "onnxruntime" },
-    { name = "rapidocr", specifier = "~=3.3.0" },
+    { name = "rapidocr", specifier = "~=3.3.1" },
     { name = "rapidocr-onnxruntime" },
 ]
 paddleocr = [
     { name = "paddleocr", specifier = ">=3.1.0" },
     { name = "paddlepaddle", specifier = ">=3.1.0" },
 ]
-surya = [{ name = "surya-ocr", specifier = "~=0.14.7" }]
+surya = [{ name = "surya-ocr", specifier = "~=0.15.2" }]
 
 [[package]]
 name = "lxml"
@@ -2832,7 +2832,7 @@ wheels = [
 
 [[package]]
 name = "rapidocr"
-version = "3.3.0"
+version = "3.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorlog" },
@@ -2848,7 +2848,7 @@ dependencies = [
     { name = "tqdm" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/4b/f6dcf8ce4c69d652a5c728b1433c26de3c80f9127ef8fb4c0171799d4a4b/rapidocr-3.3.0-py3-none-any.whl", hash = "sha256:c8f9298fe8365187b608d79d9db81d3c32fd9c91e673d159e3807cdaf30d16da", size = 15055253, upload-time = "2025-07-27T10:27:46.059Z" },
+    { url = "https://files.pythonhosted.org/packages/73/36/6bc4c1be6134a49ea598ff8ea60e17b1bf5b9b917a8affc0ca3720bcdf83/rapidocr-3.3.1-py3-none-any.whl", hash = "sha256:ec7da65eeea68943ca934c598e0703cdf549810209a2f22b45212c66eb5b6d0b", size = 15055288, upload-time = "2025-08-01T02:05:02.06Z" },
 ]
 
 [[package]]
@@ -3337,7 +3337,7 @@ wheels = [
 
 [[package]]
 name = "surya-ocr"
-version = "0.14.7"
+version = "0.15.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -3354,9 +3354,9 @@ dependencies = [
     { name = "torch" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ef/89/909e7985be0dafcc4894ab0fda11823a7f8b15df9473d677b75c7e8cd287/surya_ocr-0.14.7.tar.gz", hash = "sha256:47f24d67c846cb44e6755c60ffb60f2fe41923c7b307dcd0f4a636f61fba6a41", size = 148789, upload-time = "2025-07-25T20:19:12.531Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/cc/c08c3cd49fb4d9c8cd734d7705cdb090c2649a4a86bef76a50b9a7c61d70/surya_ocr-0.15.2.tar.gz", hash = "sha256:779f1077de5091b2f6a2e081acd0155d166e327bb0eabbd2894f14d7da4a4b0c", size = 156659, upload-time = "2025-08-04T17:08:13Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/50/e34ec655156b176eb6520cc729d3eb1d3da2c6747b29de23a672aa9ad0ae/surya_ocr-0.14.7-py3-none-any.whl", hash = "sha256:c325cf35835c3f1c6273ab605e5f25ab43cda0d69c23b73d39bf8ac7167a259e", size = 175535, upload-time = "2025-07-25T20:19:11.092Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/24/7a844783029f585b910f82f683a169f96557d4b05a7d7af2912cf92688d5/surya_ocr-0.15.2-py3-none-any.whl", hash = "sha256:d291dbb6ddc1800c28ee2c4e5841ff8d3a900af19aca51d5753fe79c98df9f4e", size = 185509, upload-time = "2025-08-04T17:08:11.411Z" },
 ]
 
 [[package]]
