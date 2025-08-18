@@ -3337,7 +3337,7 @@ wheels = [
 
 [[package]]
 name = "surya-ocr"
-version = "0.15.2"
+version = "0.15.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -3354,9 +3354,9 @@ dependencies = [
     { name = "torch" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/cc/c08c3cd49fb4d9c8cd734d7705cdb090c2649a4a86bef76a50b9a7c61d70/surya_ocr-0.15.2.tar.gz", hash = "sha256:779f1077de5091b2f6a2e081acd0155d166e327bb0eabbd2894f14d7da4a4b0c", size = 156659, upload-time = "2025-08-04T17:08:13Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/05/a5b4f2a6c38e2e00459d7de9121ed83c78425c9520cefa4023cd3be9698f/surya_ocr-0.15.4.tar.gz", hash = "sha256:6b5a84cc33c106bd07373f7a322a0f6ffa8d7fd697967de3c08061a127da6992", size = 161547, upload-time = "2025-08-12T23:21:48.978Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ab/24/7a844783029f585b910f82f683a169f96557d4b05a7d7af2912cf92688d5/surya_ocr-0.15.2-py3-none-any.whl", hash = "sha256:d291dbb6ddc1800c28ee2c4e5841ff8d3a900af19aca51d5753fe79c98df9f4e", size = 185509, upload-time = "2025-08-04T17:08:11.411Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/f2/f917064705df1ad86ed8a400503f0ff4cf8dbdb5d1309ffc5c77f0bfe97b/surya_ocr-0.15.4-py3-none-any.whl", hash = "sha256:08b361d722a0a84ffb3b6b811e9c6a004bd4c1ab5c3ad0bacb11bef6960cf033", size = 190300, upload-time = "2025-08-12T23:21:47.853Z" },
 ]
 
 [[package]]
