@@ -20,7 +20,7 @@
 ## ❗ What You Need
 
 * **Python ≥3.12**
-* **OCR tools:** Tesseract (for OCRmyPDF), a GPU for faster OCR (Surya-OCR and PaddleOCR)
+* **OCR tools:** Tesseract (for OCRmyPDF), a GPU for faster OCR (Marker and PaddleOCR)
 * **OpenAI-compatible API endpoint:**
   Required for information extraction! This can be:
 
@@ -42,9 +42,9 @@ Add extras for advanced features:
 
 ```bash
 pip install llmaix[docling]      # advanced layout + VLM support
-pip install llmaix[surya]        # Surya OCR
+pip install llmaix[marker]        # Marker (surya-OCR)
 pip install llmaix[paddleocr]    # PaddleOCR
-pip install llmaix[docling,surya,paddleocr] # all extras
+pip install llmaix[docling,marker,paddleocr] # all extras
 ```
 
 ---
@@ -70,7 +70,7 @@ from llmaix import extract_info
 from pydantic import BaseModel
 
 # Preprocessing: get Markdown or text
-proc = DocumentPreprocessor(mode="advanced", ocr_engine="surya")
+proc = DocumentPreprocessor(mode="advanced", ocr_engine="marker")
 markdown = proc.process("scan.pdf")
 
 # Information extraction: structured JSON from text via LLM
@@ -114,10 +114,10 @@ llmaix extract --input "..." --llm-model llama-3-8b-instruct --base-url http://l
 * **DocumentPreprocessor**:
 
   * Detects MIME type and routes to the appropriate handler.
-  * For PDFs: tries fast text extraction first, falls back to OCR (OCRmyPDF, PaddleOCR, Surya-OCR) if needed.
+  * For PDFs: tries fast text extraction first, falls back to OCR (OCRmyPDF, PaddleOCR, Marker) if needed.
   * DOCX, TXT, and image formats supported.
   * Advanced mode: integrates Docling for tables, formulas, and (optionally) vision-language model for image captioning.
-* **OCR Engines**: Pluggable; use Tesseract, Surya, PaddleOCR as needed.
+* **OCR Engines**: Pluggable; use Tesseract, Marker, PaddleOCR as needed.
 
 ### **Information Extraction**
 

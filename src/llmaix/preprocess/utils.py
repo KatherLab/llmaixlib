@@ -5,7 +5,6 @@ Sections
 --------
 * Markdown → PDF conversion helpers
 * Bounding‑box scaling / font‑size estimation
-* OCR‑related helpers for Surya‑OCR text‑layering
 * String‑quality heuristics (entropy‑based garbage detection)
 * PDF → PIL image conversion
 
@@ -192,56 +191,6 @@ def estimate_font_size(
         return 12.0
     avg_char_width = bbox_width / text_length
     return avg_char_width / char_width_to_height_ratio
-
-
-# ---------------------------------------------------------------------------
-# OCR helpers – Surya‑OCR post‑processing
-# ---------------------------------------------------------------------------
-
-
-def add_text_layer_to_pdf_surya(
-    pdf_path: str | Path,
-    ocr_results: list[Any],
-    output_path: str | Path,
-    src_dpi: int = 96,
-    dst_dpi: int = 72,
-) -> str:
-    """
-    Insert an invisible text layer into *pdf_path* using Surya‑OCR results.
-
-    Returns the concatenated plaintext extracted from the OCR output.
-    """
-    pdf_document = fitz.open(pdf_path)
-    full_text = ""
-    for page_num, page_ocr in enumerate(ocr_results):
-        page = pdf_document[page_num]
-        for line in page_ocr.text_lines:
-            bbox = scale_bbox(line.bbox, src_dpi, dst_dpi)
-            rect = fitz.Rect(*bbox)
-            font_size = estimate_font_size(rect.width, len(line.text))
-            page.insert_text(
-                rect.bottom_left,
-                line.text,
-                fontsize=font_size + 1,
-                fontname="helv",
-                render_mode=2,  # fill+stroke, visible in all viewers
-            )
-            full_text += f"{line.text}\n"
-        full_text += "\n"
-    pdf_document.save(output_path)
-    pdf_document.close()
-    return full_text
-
-
-def get_full_text_surya(ocr_results: list[Any]) -> str:
-    """Flatten Surya‑OCR results into plain text (page breaks = blank line)."""
-    lines: list[str] = []
-    for page_ocr in ocr_results:
-        for block in page_ocr:
-            if block[0] == "text_lines":
-                lines.extend(line.text for line in block[1])
-        lines.append("")  # page break
-    return "\n".join(lines).strip()
 
 
 # ---------------------------------------------------------------------------

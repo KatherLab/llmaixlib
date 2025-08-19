@@ -136,69 +136,6 @@ def estimate_font_size(
     return font_size
 
 
-def add_text_layer_to_pdf_surya(
-    pdf_path: str | Path,
-    ocr_results: list[Any],
-    output_path: str | Path,
-    src_dpi: int = 96,
-    dst_dpi: int = 72,
-) -> str:
-    """
-    Adds a text layer to a PDF based on surya-ocr results.
-
-    Args:
-        pdf_path (str): The path to the input PDF.
-        ocr_results (List[List]): The OCR results for each page.
-        output_path (str): The path to save the output PDF.
-        src_dpi (int, optional): The source DPI. Defaults to 96.
-        dst_dpi (int, optional): The destination DPI. Defaults to 72.
-
-    Returns:
-        str: The full text extracted from the PDF.
-    """
-    pdf_document = fitz.open(pdf_path)
-    full_text = ""
-    for page_num, page_ocr in enumerate(ocr_results):
-        page = pdf_document[page_num]
-        for line in page_ocr.text_lines:
-            bbox = scale_bbox(line.bbox, src_dpi, dst_dpi)
-            text = line.text
-            rect = fitz.Rect(bbox[0], bbox[1], bbox[2], bbox[3])
-            font_size = estimate_font_size(rect.width, len(text))
-            page.insert_text(
-                rect.bottom_left,
-                text,
-                fontsize=font_size + 1,
-                fontname="helv",
-                render_mode=3,
-            )
-            full_text += text + "\n"
-        full_text += "\n\n"
-    pdf_document.save(output_path)
-    pdf_document.close()
-    return full_text
-
-
-def get_full_text_surya(ocr_results: list[Any]) -> str:
-    """
-    Generates the full text from OCR results.
-
-    Args:
-        ocr_results (List[Any]): The OCR results for each page.
-
-    Returns:
-        str: The full text extracted from the OCR results.
-    """
-    full_text = ""
-    for page_ocr in ocr_results:
-        for block in page_ocr:
-            if block[0] == "text_lines":
-                for line in block[1]:
-                    full_text += line.text + "\n"
-        full_text += "\n\n"  # Add a page break
-    return full_text.strip()  # Remove trailing whitespace
-
-
 def pdf_to_images(
     filename: Path | str,
 ) -> list[Image.Image]:

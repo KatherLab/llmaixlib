@@ -5,7 +5,7 @@ Exports
 -------
 * run_tesseract_ocr
 * run_paddleocr
-* run_suryaocr
+* run_marker
 
 Every function returns **pure text** (`str`), never a tuple. Any paths to
 intermediate OCR PDFs are handled internally and, if needed, by the caller.
@@ -115,11 +115,21 @@ def run_paddleocr(
             import fitz
             from paddleocr import PPStructureV3
 
+            # Same pipeline arguments as in your standalone script
             pipeline = PPStructureV3(
-                use_doc_orientation_classify=False,
+                text_recognition_model_name="PP-OCRv5_server_rec",
+                text_detection_model_name="PP-OCRv5_server_det",
+                use_doc_orientation_classify=True,
+                use_textline_orientation=True,
                 use_doc_unwarping=False,
+                use_table_recognition=True,
+                text_det_limit_side_len=2048,
+                text_det_box_thresh=0.5,
+                device="gpu",
+                precision="fp16",
             )
-            results: list[str] = []
+
+            markdown_list: list[str] = []
 
             if mime == "application/pdf":
                 with fitz.open(_P(file_path)) as doc:
@@ -132,14 +142,8 @@ def run_paddleocr(
                             img.thumbnail(
                                 (max_image_dim, max_image_dim), Image.Resampling.LANCZOS
                             )
-                        output = pipeline.predict(np.array(img))
-                        for res in output:
-                            md = (
-                                (res.markdown["markdown_texts"] or str(res))  # noqa
-                                if isinstance(res, dict)
-                                else str(res)
-                            )
-                            results.append(md)
+                        output = pipeline.predict(np.array(img), use_table_orientation_classify=True)
+                        markdown_list.extend([res.markdown for res in output])
             elif mime and mime.startswith("image/"):
                 with Image.open(file_path) as img:
                     img = img.convert("RGB")
@@ -147,17 +151,14 @@ def run_paddleocr(
                         img.thumbnail(
                             (max_image_dim, max_image_dim), Image.Resampling.LANCZOS
                         )
-                    output = pipeline.predict(np.array(img))
-                    for res in output:
-                        md = (
-                            (res.markdown["markdown_texts"] or str(res))  # noqa
-                            if isinstance(res, dict)
-                            else str(res)
-                        )
-                        results.append(md)
+                    output = pipeline.predict(np.array(img), use_table_orientation_classify=True)
+                    markdown_list.extend([res.markdown for res in output])
             else:
                 raise ValueError(f"Unsupported file type: {file_path} ({mime})")
-            return "\n\n".join(results)
+
+            # Use the built-in concatenation like in your script
+            return pipeline.concatenate_markdown_pages(markdown_list)
+
     except ImportError as e:  # pragma: no cover
         raise RuntimeError(
             "PaddleOCR (paddleocr) not installed. Install with `pip install paddleocr`."
@@ -167,61 +168,41 @@ def run_paddleocr(
 
 
 # ---------------------------------------------------------------------------
-# Surya‑OCR
+# Marker
 # ---------------------------------------------------------------------------
 
 
-def run_suryaocr(
+def run_marker(
     file_path: Path,
-    languages: list[str] | None = None,
-    max_image_dim: int = 800,
+    languages: list[str] | None = None,  # kept for API parity (unused by Marker)
+    max_image_dim: int = 800,            # kept for API parity (unused by Marker)
 ) -> str:
     """
-    Accepts PDF or image. Processes accordingly.
+    Accepts a PDF path and returns Markdown extracted by Marker.
+    Note: Marker works on PDFs directly; images are not supported here.
     """
-    import fitz
-    from PIL import Image
+    try:
+        from marker.converters.pdf import PdfConverter
+        from marker.models import create_model_dict
+    except ImportError as e:  # pragma: no cover
+        raise RuntimeError(
+            "Marker is not installed. Install with `pip install marker-pdf`."
+        ) from e
 
-    from surya.foundation import FoundationPredictor
-    from surya.detection import DetectionPredictor
-    from surya.recognition import RecognitionPredictor
+    # Only PDFs are supported for Marker in this function
+    if file_path.suffix.lower() != ".pdf":
+        raise ValueError(f"Unsupported file type for run_marker: {file_path.suffix}. Expected a PDF.")
 
-    # cache models
-    if not hasattr(run_suryaocr, "_recog"):
-        foundation_predictor = FoundationPredictor()
-        run_suryaocr._recog = RecognitionPredictor(foundation_predictor)  # type: ignore[attr-defined]
-        run_suryaocr._detect = DetectionPredictor()  # type: ignore[attr-defined]
+    # Cache models/converter across calls
+    if not hasattr(run_marker, "_converter"):
+        model_dict = create_model_dict()
+        run_marker._converter = PdfConverter(artifact_dict=model_dict)  # type: ignore[attr-defined]
 
-    recog = run_suryaocr._recog  # type: ignore[attr-defined]
-    detect = run_suryaocr._detect  # type: ignore[attr-defined]
+    converter = run_marker._converter  # type: ignore[attr-defined]
 
-    images = []
-    # PDF branch
-    if file_path.suffix.lower() == ".pdf":
-        with fitz.open(file_path) as doc:
-            for page in doc:
-                pix = page.get_pixmap()
-                img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-                if max(img.size) > max_image_dim:
-                    img.thumbnail(
-                        (max_image_dim, max_image_dim), Image.Resampling.LANCZOS
-                    )
-                images.append(img)
-    # Image branch
-    elif file_path.suffix.lower() in [".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif"]:
-        with Image.open(file_path) as img:
-            img = img.convert("RGB")
-            if max(img.size) > max_image_dim:
-                img.thumbnail((max_image_dim, max_image_dim), Image.Resampling.LANCZOS)
-            images.append(img)
-    else:
-        raise ValueError(f"Unsupported file type: {file_path.suffix}")
-
-    predictions = recog(images, det_predictor=detect)
-    lines: list[str] = []
-    for page_pred in predictions:
-        if hasattr(page_pred, "text_lines"):
-            lines.extend(line.text for line in page_pred.text_lines)
-        lines.append("")  # page break
-
-    return "\n".join(lines).strip()
+    try:
+        rendered = converter(str(file_path))
+        # Marker returns a single Markdown string
+        return getattr(rendered, "markdown", str(rendered))
+    except Exception as e:  # pragma: no cover
+        raise RuntimeError(f"Marker failed on {file_path}: {e}") from e

@@ -32,7 +32,7 @@ def test_preprocess_pdf_with_text(mode):
     assert "Medical History" in result
 
 
-@pytest.mark.parametrize("ocr_engine", ["ocrmypdf", "paddleocr", "surya"])
+@pytest.mark.parametrize("ocr_engine", ["ocrmypdf", "paddleocr", "marker"])
 @pytest.mark.parametrize("mode", ["fast", "advanced"])
 def test_preprocess_pdf_needs_ocr(ocr_engine, mode):
     result = run_preprocess(PDF_NO_TEXT, mode=mode, ocr_engine=ocr_engine)

@@ -51,7 +51,7 @@ def main() -> None:
 )
 @click.option(
     "--ocr-engine",
-    type=click.Choice(["ocrmypdf", "paddleocr", "surya"]),
+    type=click.Choice(["ocrmypdf", "paddleocr", "marker"]),
     default="ocrmypdf",
     show_default=True,
     help="OCR backend for scans",

@@ -1,4 +1,4 @@
-"""User‑facing API (`preprocess_file`) and core orchestration."""
+"""User-facing API (`preprocess_file`) and core orchestration."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from pydantic import AnyUrl
 from .backends import extract_docling, extract_pymupdf
 from .document import Document
 from .mime_detect import detect_mime
-from .ocr_engines import run_paddleocr, run_suryaocr, run_tesseract_ocr
+from .ocr_engines import run_paddleocr, run_marker, run_tesseract_ocr
 from .utils import string_is_empty_or_garbage
 
 # --------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ def register_backend(mime: str):
 
 
 class DocumentPreprocessor:
-    """High‑level orchestrator. Instantiate once per *job*."""
+    """High-level orchestrator. Instantiate once per *job*."""
 
     VALID_MODES = {"fast", "advanced"}
 
@@ -241,6 +241,6 @@ class DocumentPreprocessor:
             )
         if self.ocr_engine == "paddleocr":
             return run_paddleocr(path, max_image_dim=self.max_image_dim)
-        if self.ocr_engine == "surya":
-            return run_suryaocr(path, max_image_dim=self.max_image_dim)
+        if self.ocr_engine == "marker":
+            return run_marker(path)
         raise ValueError(f"Unknown OCR engine: {self.ocr_engine}")
