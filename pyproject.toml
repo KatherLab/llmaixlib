@@ -17,10 +17,10 @@ license-files = ["LICEN[CS]E*"]
 dependencies = [
   "markitdown[docx, xlsx, xls, pdf]~=0.1.2",
   "click~=8.2.1",
-  "pymupdf~=1.26.3",
+  "pymupdf~=1.26.4",
   "pymupdf4llm==0.0.27",
   "ocrmypdf~=16.10.4",
-  "openai>=1.100.1",
+  "openai>=1.102.0",
   "pytest>=8.4.1",
   "hatchling~=1.27.0",
   "filetype>=1.2.0"
@@ -46,17 +46,17 @@ packages = ["src/llmaix"]
 
 [dependency-groups]
 dev = [
-  "ruff>=0.12.9",
-  "ty~=0.0.1a18",
+  "ruff>=0.12.10",
+  "ty~=0.0.1a19",
   "pytest~=8.4.1",
   "pytest-cov~=6.2.1",
   "isort~=6.0.1",
 ]
 marker = [
-  "marker-pdf[full]~=1.8.3",
+  "marker-pdf[full]~=1.8.5",
 ]
 docling = [
-  "docling~=2.45.0",
+  "docling~=2.47.0",
   "rapidocr~=3.3.1",
   "onnxruntime",
   "rapidocr_onnxruntime"
@@ -64,28 +64,30 @@ docling = [
 
 # CPU-only Paddle for the paddleocr extra
 paddleocr = [
-  "paddleocr>=3.1.1",
-  "paddlepaddle==3.1.0",
+  "paddleocr>=3.2.0",
+  "paddlepaddle==3.1.1",
+    "paddlex[ocr]"
 ]
 
 [project.optional-dependencies]
 dev = [
   "pytest~=8.4.1",
   "pytest-cov~=6.2.1",
-  "ruff~=0.12.9",
-  "ty~=0.0.1a18",
+  "ruff~=0.12.10",
+  "ty~=0.0.1a19",
   "isort~=6.0.1",
 ]
-marker = ["marker-pdf[full]~=1.8.3"]
+marker = ["marker-pdf[full]~=1.8.5"]
 docling = [
-  "docling~=2.45.0",
+  "docling~=2.47.0",
   "rapidocr~=3.3.1",
   "onnxruntime",
   "rapidocr_onnxruntime"
 ]
 paddleocr = [
-  "paddleocr>=3.1.1",
-  "paddlepaddle==3.1.0",
+  "paddleocr>=3.2.0",
+  "paddlepaddle==3.1.1",
+    "paddlex[ocr]"
 ]
 all = ["llmaix[dev,marker,docling,paddleocr]"]
 
