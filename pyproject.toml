@@ -73,7 +73,7 @@ paddleocr = [
 dev = [
   "pytest~=8.4.1",
   "pytest-cov~=6.2.1",
-  "ruff~=0.12.10",
+  "ruff>=0.12.10,<0.14.0",
   "ty~=0.0.1a19",
   "isort~=6.0.1",
 ]
