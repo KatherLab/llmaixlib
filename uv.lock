@@ -1222,7 +1222,7 @@ docling = [
     { name = "rapidocr", specifier = "~=3.3.1" },
     { name = "rapidocr-onnxruntime" },
 ]
-marker = [{ name = "marker-pdf", extras = ["full"], specifier = "~=1.8.5" }]
+marker = [{ name = "marker-pdf", extras = ["full"], specifier = ">=1.8.5,<1.11.0" }]
 paddleocr = [
     { name = "paddleocr", specifier = ">=3.2.0" },
     { name = "paddlepaddle", specifier = "==3.1.1" },
